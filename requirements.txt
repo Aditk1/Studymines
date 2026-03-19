@@ -1,0 +1,22 @@
+fastapi
+uvicorn[standard]  # ASGI server for FastAPI
+sqlalchemy
+psycopg2-binary  # PostgreSQL driver
+python-multipart  # For form data handling
+python-dotenv  # For environment variables
+pymupdf  # For PDF parsing
+python-pptx
+python-docx
+langchain
+pillow
+opencv-python
+google-generativeai
+evaluate  # HuggingFace evaluation framework
+rouge-score  # ROUGE metrics (PRD Section 6.2)
+bert-score  # BERTScore F1 metric (PRD Section 6.2)
+transformers  # For Hugging Face models
+torch  # Required for transformers (may need GPU support)
+pytesseract  # Tesseract OCR baseline (PRD Section 5.4.3)
+nltk  # METEOR metric (PRD Section 6.2)
+matplotlib  # Research paper figure generation
+numpy  # Numerical computations for evaluation

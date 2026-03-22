@@ -66,3 +66,4 @@ pytest-asyncio>=0.23.0
 
 # --- Async ---
 asyncio-throttle>=1.0.2
+PyJWT>=2.8.0

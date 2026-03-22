@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-load_dotenv()
+load_dotenv(override=True)
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./master_edurag.db")
 
@@ -29,6 +29,10 @@ def get_db():
 def init_db():
     """Create all tables."""
     from app.models import User, Upload, Performance, Usage, GraphEntity
+    from app.lms.models import (
+        Classroom, ClassroomMember, LMSMaterial, DocumentChunk, 
+        ChatRoom, ChatMessage, Exam, ExamClassroom, ExamSubmission
+    )
     Base.metadata.create_all(bind=engine)
 
 

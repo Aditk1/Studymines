@@ -45,7 +45,7 @@ export default function Profile({ user, onUpdate, onLogout }) {
             <h2 className="text-5xl font-medium tracking-tighter mb-2">{user.name}</h2>
             <div className="flex items-center gap-4 text-white/40">
                 <span className="flex items-center gap-1.5 text-sm uppercase tracking-widest font-bold">
-                    <GraduationCap size={14} /> {user.student_level.replace('_', ' ')}
+                    <GraduationCap size={14} /> {(user.student_level || 'student').replace('_', ' ')}
                 </span>
                 <span className="w-1 h-1 bg-white/20 rounded-full" />
                 <span className="flex items-center gap-1.5 text-sm uppercase tracking-widest font-bold">

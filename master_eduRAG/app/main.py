@@ -61,6 +61,18 @@ async def startup_event():
     except Exception as e:
         print(f"⚠ DB init warning: {e}")
 
+# Include LMS WebSocket router
+from app.lms.chat_socket import router as lms_ws_router
+app.include_router(lms_ws_router, prefix="/api/v1")
+
+# Include LMS Analytics router 
+from app.lms.api.analytics import router as lms_analytics_router
+app.include_router(lms_analytics_router, prefix="/api/v1")
+
+# Include Core LMS CRUD router
+from app.lms.api.lms_routes import router as lms_routes_router
+app.include_router(lms_routes_router, prefix="/api/v1")
+
 
 # ═══════════════════════════════════════════════════════════════
 # Root
@@ -92,18 +104,30 @@ async def root():
 # Auth
 # ═══════════════════════════════════════════════════════════════
 
+from app.lms.auth import create_access_token, detect_role_from_email, get_current_user
+
 @app.post("/api/v1/auth/signup")
 async def signup(
     name: str = Form(...), email: str = Form(...),
     password: str = Form(...), student_level: str = Form("undergraduate"),
+    role: str = Form("student"),  # Accept role choice from frontend
     db: Session = Depends(get_db),
 ):
     existing = db.query(User).filter(User.email == email).first()
     if existing:
         return JSONResponse(status_code=400, content={"error": "Email already registered"})
-    user = User(name=name, email=email, password_hash=password, student_level=student_level)
+    
+    # Use explicitly chosen role
+    user = User(name=name, email=email, password_hash=password, student_level=student_level, role=role)
     db.add(user); db.commit(); db.refresh(user)
-    return {"success": True, "user": {"id": user.id, "name": user.name, "email": user.email, "student_level": user.student_level}}
+    
+    access_token = create_access_token(data={"sub": str(user.id)})
+    return {
+        "success": True, 
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user": {"id": user.id, "name": user.name, "email": user.email, "role": user.role, "student_level": user.student_level}
+    }
 
 
 @app.post("/api/v1/auth/login")
@@ -111,17 +135,32 @@ async def login(email: str = Form(...), password: str = Form(...), db: Session =
     user = db.query(User).filter(User.email == email).first()
     if not user or user.password_hash != password:
         return JSONResponse(status_code=401, content={"error": "Invalid email or password"})
-    return {"success": True, "user": {"id": user.id, "name": user.name, "email": user.email, "student_level": user.student_level}}
+    
+    # Auto-detect role on login as requested
+    detected_role = detect_role_from_email(email)
+    if user.role != detected_role:
+        user.role = detected_role
+        db.commit(); db.refresh(user)
+
+    access_token = create_access_token(data={"sub": str(user.id)})
+    return {
+        "success": True, 
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user": {"id": user.id, "name": user.name, "email": user.email, "role": user.role, "student_level": user.student_level}
+    }
 
 
 @app.post("/api/v1/users")
 async def create_user(name: str = Form(...), email: str = Form(...), student_level: str = Form("undergraduate"), db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.email == email).first()
     if existing:
-        return {"id": existing.id, "name": existing.name, "email": existing.email, "student_level": existing.student_level, "message": "User already exists"}
-    user = User(name=name, email=email, student_level=student_level)
+        return {"id": existing.id, "name": existing.name, "email": existing.email, "role": existing.role, "student_level": existing.student_level, "message": "User already exists"}
+    
+    role = detect_role_from_email(email)
+    user = User(name=name, email=email, student_level=student_level, role=role)
     db.add(user); db.commit(); db.refresh(user)
-    return {"id": user.id, "name": user.name, "email": user.email, "student_level": user.student_level, "message": "User created"}
+    return {"id": user.id, "name": user.name, "email": user.email, "role": user.role, "student_level": user.student_level, "message": "User created"}
 
 
 @app.get("/api/v1/users/guest/{username}")
@@ -129,9 +168,10 @@ async def get_or_create_guest(username: str, db: Session = Depends(get_db)):
     email = f"{username}@guest.local"
     user = db.query(User).filter(User.email == email).first()
     if not user:
-        user = User(name=username, email=email, student_level="undergraduate")
+        role = detect_role_from_email(email)
+        user = User(name=username, email=email, student_level="undergraduate", role=role)
         db.add(user); db.commit(); db.refresh(user)
-    return {"id": user.id, "name": user.name, "email": user.email, "student_level": user.student_level}
+    return {"id": user.id, "name": user.name, "email": user.email, "role": user.role, "student_level": user.student_level}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -139,16 +179,29 @@ async def get_or_create_guest(username: str, db: Session = Depends(get_db)):
 # ═══════════════════════════════════════════════════════════════
 
 def _resolve_user(user_id: str, db: Session, student_level: str = "undergraduate") -> User:
-    if user_id.isdigit():
-        user = db.query(User).filter(User.id == int(user_id)).first()
-    else:
-        email = f"{user_id}@guest.local"
-        user = db.query(User).filter(User.email == email).first()
-        if not user:
-            user = User(name=user_id, email=email, student_level=student_level)
-            db.add(user); db.commit(); db.refresh(user)
+    """ Resolves a user by UUID, or falls back to guest auto-creation. """
+    user = None
+    
+    # 1. Attempt UUID lookup if it looks like one (avoids operator does not exist: uuid = integer)
+    try:
+        user_uuid = uuid.UUID(user_id)
+        user = db.query(User).filter(User.id == user_uuid).first()
+        if user:
+            return user
+    except (ValueError, AttributeError):
+        pass
+
+    # 2. Fallback to guest email-based lookup (maintains original guest logic)
+    email = f"{user_id}@guest.local"
+    user = db.query(User).filter(User.email == email).first()
+    
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        # Auto-create if not found (guest flow)
+        user = User(name=user_id, email=email, student_level=student_level)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        
     return user
 
 

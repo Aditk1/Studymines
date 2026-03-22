@@ -1,0 +1,155 @@
+# =============================================================================
+# RLM-GraphRAG Base Configuration
+# All experiments inherit from this. Override per variant/dataset yaml.
+# =============================================================================
+
+project:
+  name: "rlm_graphrag"
+  version: "1.0.0"
+  seed: 42
+
+# -----------------------------------------------------------------------------
+# LLM Backend
+# -----------------------------------------------------------------------------
+llm:
+  provider: "ollama"          # ollama | openai | anthropic
+  model: "llama3.2:3b"
+  temperature: 0.0
+  max_tokens: 1024
+  timeout: 120
+  # Ollama-specific
+  ollama_base_url: "http://localhost:11434"
+  # OpenAI-specific (set via env: OPENAI_API_KEY)
+  openai_model: "gpt-4o-mini"
+  # Anthropic-specific (set via env: ANTHROPIC_API_KEY)
+  anthropic_model: "claude-haiku-4-5-20251001"
+
+# -----------------------------------------------------------------------------
+# Embeddings
+# -----------------------------------------------------------------------------
+embeddings:
+  model: "sentence-transformers/all-MiniLM-L6-v2"
+  device: "cuda"              # cuda | cpu  (auto-falls back to cpu)
+  batch_size: 32
+  normalize: true
+
+# -----------------------------------------------------------------------------
+# Ingestion Pipeline
+# -----------------------------------------------------------------------------
+ingestion:
+  chunk_size: 200           # tokens per chunk
+  chunk_overlap: 64
+  extractor: "llm"          # rebel | spacy | llm
+  rebel_model: "Babelscape/rebel-large"
+  rebel_device: "cuda"
+  spacy_model: "en_core_web_lg"
+  min_entity_length: 4
+  max_triples_per_chunk: 16
+
+# -----------------------------------------------------------------------------
+# Contribution 1 — Confidence Scoring
+# -----------------------------------------------------------------------------
+confidence:
+  enabled: true
+  axes:
+    factual_weight: 0.40
+    specificity_weight: 0.35
+    coherence_weight: 0.25
+  min_confidence_threshold: 0.15   # triples below this are discarded
+  batch_size: 8  
+  mode : "balanced"                  # LLM calls per batch
+
+# -----------------------------------------------------------------------------
+# Contribution 2 — Community Detection
+# -----------------------------------------------------------------------------
+community:
+  strategy: "cw_leiden"       # leiden | cw_leiden | rlm_community
+  leiden:
+    resolution: 1.0
+    n_iterations: 10
+    seed: 42
+  cw_leiden:
+    resolution: 1.0
+    n_iterations: 10
+    seed: 42
+    weight_attribute: "confidence"
+  rlm_community:
+    max_entities_per_call: 20
+    similarity_threshold: 0.6
+
+# -----------------------------------------------------------------------------
+# Contribution 3 — RLM Traversal
+# -----------------------------------------------------------------------------
+traversal:
+  strategy: "rlm"             # fixed_hop | rlm
+  fixed_hop:
+    k: 3
+  rlm:
+    max_depth: 5
+    max_nodes_per_step: 10
+    min_confidence_filter: 0.3
+    repl_timeout: 30           # seconds per REPL execution
+    max_repl_steps: 15
+
+# -----------------------------------------------------------------------------
+# Contribution 4 — Parallel Multi-Entity Traversal
+# -----------------------------------------------------------------------------
+parallel:
+  enabled: true
+  max_concurrent_entities: 5
+  convergence_min_paths: 2     # node must appear in N paths to be "converged"
+  convergence_weight_by_confidence: true
+  async_timeout: 60
+
+# -----------------------------------------------------------------------------
+# Vector Store (ChromaDB)
+# -----------------------------------------------------------------------------
+vector_store:
+  persist_directory: "outputs/chroma_db"
+  collection_name: "entities"
+  distance_metric: "cosine"
+  top_k: 10
+
+# -----------------------------------------------------------------------------
+# Retrieval & Answer Generation
+# -----------------------------------------------------------------------------
+retrieval:
+  seed_entity_top_k: 5
+  context_max_tokens: 3000
+  dedup_similarity_threshold: 0.92
+
+answer_generation:
+  system_prompt: |
+    You are an expert AI Study Assistant. Your goal is to help students understand 
+    complex concepts found in their documents.
+    
+    GUIDELINES:
+    1. Answer based ON THE KNOWLEDGE GRAPH CONTEXT PROVIDED.
+    2. If a user provides only a single concept or term (e.g., "Greedy Method"), provide 
+       a detailed definition and explain its significance based on the context.
+    3. Use a clear, academic, yet encouraging tone.
+    4. If the answer is NOT in the context, clearly state that the information isn't 
+       present in the current document, but offer to explain it from your general 
+       knowledge IF you specify that it is general knowledge.
+    5. Structure your output with bullet points if explaining a process.
+
+
+# -----------------------------------------------------------------------------
+# Evaluation
+# -----------------------------------------------------------------------------
+evaluation:
+  metrics:
+    - exact_match
+    - f1
+    - rouge_l
+  track_cost: true
+  track_latency: true
+  track_nodes_visited: true
+
+# -----------------------------------------------------------------------------
+# Logging
+# -----------------------------------------------------------------------------
+logging:
+  level: "INFO"
+  format: "json"
+  output_dir: "outputs/logs"

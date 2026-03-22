@@ -1,0 +1,14 @@
+# Variant: Standard GraphRAG (Leiden + fixed K-hop, no confidence)
+_base: "config/base.yaml"
+variant_name: "baseline_graphrag"
+confidence:
+  enabled: false
+community:
+  strategy: "leiden"
+traversal:
+  strategy: "fixed_hop"
+  fixed_hop:
+    k: 3
+parallel:
+  enabled: false
+use_graph: true

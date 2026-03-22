@@ -1,0 +1,12 @@
+# Variant: C1 + C2 + C3 (RLM traversal), no parallel
+_base: "config/base.yaml"
+variant_name: "ablation_c1_c2_c3"
+confidence:
+  enabled: true
+community:
+  strategy: "cw_leiden"
+traversal:
+  strategy: "rlm"
+parallel:
+  enabled: false
+use_graph: true

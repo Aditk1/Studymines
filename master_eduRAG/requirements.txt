@@ -1,0 +1,68 @@
+# ============================================================
+# master_eduRAG — Unified Dependencies
+# Studymines (Adaptive Learning) + RLM-GraphRAG (Cognitive Core)
+# ============================================================
+
+# --- Web Framework ---
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart
+
+# --- Database ---
+sqlalchemy>=2.0.0
+psycopg2-binary
+python-dotenv
+
+# --- Document Parsing (Studymines) ---
+pymupdf>=1.24.0
+python-pptx
+python-docx
+
+# --- Vision / OCR (Studymines SAEOCR) ---
+pillow>=10.0.0
+opencv-python>=4.9.0
+google-generativeai>=0.5.0
+
+# --- Core ML (RLM-GraphRAG) ---
+torch>=2.1.0
+transformers>=4.38.0
+sentence-transformers>=2.6.0
+spacy>=3.7.0
+
+# --- Knowledge Graph (RLM-GraphRAG) ---
+networkx>=3.2.0
+cdlib>=0.3.0
+leidenalg>=0.10.0
+python-igraph>=0.11.0
+
+# --- Vector Store ---
+chromadb>=0.4.24
+
+# --- LLM Backends (RLM-GraphRAG) ---
+ollama>=0.1.8
+openai>=1.12.0
+anthropic>=0.23.0
+
+# --- Config & Validation ---
+pydantic>=2.6.0
+pyyaml>=6.0.1
+
+# --- Logging ---
+structlog>=24.1.0
+
+# --- Evaluation & Research ---
+evaluate
+rouge-score
+bert-score
+nltk
+matplotlib>=3.8.0
+seaborn>=0.13.0
+pandas>=2.2.0
+numpy>=1.26.0
+
+# --- Testing ---
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+
+# --- Async ---
+asyncio-throttle>=1.0.2

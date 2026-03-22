@@ -1,0 +1,19 @@
+# Variant: C1 + C2 (confidence-weighted Leiden) + Parallel dispatch
+# Fixed-hop traversal (no RLM calls) — fast, good for first runs
+_base: "config/base.yaml"
+variant_name: "ablation_c1_c2"
+confidence:
+  enabled: true
+community:
+  strategy: "cw_leiden"
+traversal:
+  strategy: "fixed_hop"
+  fixed_hop:
+    k: 3
+parallel:
+  enabled: true              # ON — parallel multi-entity traversal active
+  max_concurrent_entities: 4
+  convergence_min_paths: 2
+  convergence_weight_by_confidence: true
+  async_timeout: 60
+use_graph: true

@@ -1,0 +1,12 @@
+# Variant: Full system — all four contributions enabled
+_base: "config/base.yaml"
+variant_name: "full_system"
+confidence:
+  enabled: true
+community:
+  strategy: "cw_leiden"
+traversal:
+  strategy: "rlm"
+parallel:
+  enabled: true
+use_graph: true

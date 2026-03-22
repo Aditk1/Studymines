@@ -1,0 +1,14 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pkl
+*.db
+data/graphs/
+data/chroma_db/
+data/uploads/
+outputs/
+.pytest_cache/
+*.egg-info/
+dist/
+build/

@@ -1,0 +1,14 @@
+dataset_name: "educational"
+display_name: "Educational QA (Custom)"
+data_dir: "data/educational"
+split: "all"
+max_samples: null              # use all available
+question_field: "question"
+answer_field: "answer"
+context_field: "source_document"
+multi_hop: true
+hop_range: [1, 3]
+domains:
+  - "machine_learning"
+  - "deep_learning"
+  - "natural_language_processing"

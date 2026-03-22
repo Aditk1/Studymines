@@ -2,7 +2,7 @@
 
 **Studymines** is an AI-powered educational platform that transforms raw study materials—from PDFs and slide decks to photographs of handwritten notes—into structured, student-ready study packages. 
 
-Using advanced Vision LLMs (Gemini 1.5 Pro), Studymines extracts semantic meaning from any format and generates adaptive summaries, flashcards, and exam questions tailored to your educational level.
+Using advanced Vision LLMs , Studymines extracts semantic meaning from any format and generates adaptive summaries, flashcards, and exam questions tailored to your educational level.
 
 ---
 

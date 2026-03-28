@@ -72,10 +72,8 @@ class RAGBridge:
     ) -> Dict[str, Any]:
         """
         Feed extracted text into the RLM-GraphRAG pipeline.
-
-        Returns dict with:
-            success, num_triples, confidence_ratio, graph_path, num_communities
         """
+        print(f"DEBUG_RAG_BRIDGE: ingest_to_graph started for {source_name} (text len: {len(text)})")
         if not self.pipeline:
             return {"success": False, "error": "RAG Pipeline not initialised"}
 
@@ -89,6 +87,7 @@ class RAGBridge:
 
         try:
             result: IngestResult = await self.pipeline.ingest(documents, save_path=save_path)
+            print(f"DEBUG_RAG_BRIDGE: Ingestion successful. Triples: {result.num_triples_kept}")
             self._last_graph = result.graph
 
             return {
@@ -105,8 +104,10 @@ class RAGBridge:
                     if hasattr(result.graph, "communities")
                     else 0
                 ),
+                "nodes": list(result.graph.nodes()) if hasattr(result.graph, "nodes") else []
             }
         except Exception as exc:
+            print(f"DEBUG_RAG_BRIDGE: Ingestion error: {exc}")
             return {"success": False, "error": str(exc)}
 
     # ── Enrichment ────────────────────────────────────────────────────────
@@ -190,8 +191,9 @@ async def process_with_rag(
     text: str,
     source_name: str,
     study_package: Dict[str, Any],
-) -> Dict[str, Any]:
-    """One-call helper: ingest + enrich."""
+) -> (Dict[str, Any], Dict[str, Any]):
+    """One-call helper: ingest + enrich. Returns (package, stats)"""
     bridge = RAGBridge()
     stats = await bridge.ingest_to_graph(text, source_name)
-    return bridge.enrich_study_package(study_package, stats)
+    pkg = bridge.enrich_study_package(study_package, stats)
+    return pkg, stats

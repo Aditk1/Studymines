@@ -13,8 +13,8 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./master_edurag.db")
 
 # ── Gemini (Studymines Vision + EPF) ──────────────────────────
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY", "")
-DEFAULT_MODEL = "gemini-2.5-flash"
-VISION_MODEL = "gemini-2.5-flash"
+DEFAULT_MODEL = "gemini-3-flash-preview"
+VISION_MODEL = "gemini-3-flash-preview"
 
 # ── RLM-GraphRAG LLM ─────────────────────────────────────────
 RAG_LLM_PROVIDER = os.getenv("RAG_LLM_PROVIDER", "ollama")

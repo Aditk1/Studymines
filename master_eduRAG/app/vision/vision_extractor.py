@@ -24,7 +24,9 @@ class VisionExtractor:
         """
         if api_key:
             genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(VISION_MODEL)
+        model_name = VISION_MODEL if VISION_MODEL.startswith("models/") else f"models/{VISION_MODEL}"
+        print(f"DEBUG_VISION: Initializing model {model_name}")
+        self.model = genai.GenerativeModel(model_name)
 
     @retry_with_backoff(retries=5)
     def _generate_content(self, contents):
@@ -66,6 +68,7 @@ Respond in JSON format:
 }
 """
             
+            print(f"DEBUG_VISION: Sending request to Gemini Vision (data length: {len(image_data)})")
             response = self._generate_content([
                 {
                     "mime_type": "image/jpeg",
@@ -73,6 +76,7 @@ Respond in JSON format:
                 },
                 prompt
             ])
+            print(f"DEBUG_VISION: Response received from Gemini.")
             
             # Parse response
             result = clean_json_response(response.text)

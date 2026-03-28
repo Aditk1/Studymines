@@ -109,7 +109,7 @@ Generate the FOLLOWING in JSON format:
 1. LEVELED SUMMARY: A concise summary adapted to {student_level} comprehension level.
 2. KEY CONCEPTS: List of 5+ core concepts with brief explanations.
 3. FLASHCARDS: 6+ question-answer pairs for active recall, with difficulty tags.
-4. EXAM QUESTIONS: 4+ questions covering Bloom's taxonomy (recall, understand, apply, analyze) with difficulty and model answers.
+4. EXAM QUESTIONS: 5+ Multiple Choice Questions (MCQs). Each must have 'question', 4 'options', 'correct_answer', and 'explanation'.
 
 Respond ONLY with valid JSON:
 {{
@@ -136,9 +136,10 @@ Respond ONLY with valid JSON:
     "questions": [
         {{
             "question": "Question text",
+            "options": ["Option A", "Option B", "Option C", "Option D"],
+            "correct_answer": "Option A",
             "question_type": "recall|understand|apply|analyze",
             "difficulty": "easy|medium|hard",
-            "model_answer": "Expected answer",
             "explanation": "Why this is correct"
         }}
     ]

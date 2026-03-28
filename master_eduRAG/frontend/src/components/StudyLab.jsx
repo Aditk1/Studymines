@@ -12,8 +12,10 @@ import {
   Award,
   Sparkles,
   ArrowRight,
-  Info
+  Info,
+  Map as MapIcon
 } from 'lucide-react'
+import KnowledgeMap from './KnowledgeMap'
 
 export default function StudyLab({ uploadId, userId, onBack }) {
   const [data, setData] = useState(null)
@@ -65,11 +67,15 @@ export default function StudyLab({ uploadId, userId, onBack }) {
     { id: 'summary', label: 'Summary', icon: BookOpen },
     { id: 'concepts', label: 'Concepts', icon: Layers },
     { id: 'flashcards', label: 'Flashcards', icon: RotateCw },
+    { id: 'topology', label: 'Map', icon: MapIcon },
     { id: 'quiz', label: 'Quiz', icon: Award },
   ]
 
-  const handleQuizAnswer = (isCorrect) => {
-    const newAnswers = [...quizAnswers, isCorrect]
+  const handleQuizAnswer = (selectedOption) => {
+    const question = packageData.questions[quizIdx]
+    const isCorrect = selectedOption === question.correct_answer
+    
+    const newAnswers = [...quizAnswers, { question: question.question, selected: selectedOption, correct: isCorrect }]
     setQuizAnswers(newAnswers)
     if (isCorrect) setQuizScore(quizScore + 1)
     
@@ -77,7 +83,7 @@ export default function StudyLab({ uploadId, userId, onBack }) {
       setQuizIdx(quizIdx + 1)
     } else {
       setShowQuizResult(true)
-      // Save performance to DB
+      // Save performance AND mastery
       const scorePercentage = ((quizScore + (isCorrect ? 1 : 0)) / packageData.questions.length) * 100
       axios.post('/api/v1/performance', new URLSearchParams({
         upload_id: uploadId,
@@ -252,6 +258,26 @@ export default function StudyLab({ uploadId, userId, onBack }) {
             </motion.div>
           )}
 
+          {/* TOPOLOGY TAB */}
+          {activeTab === 'topology' && (
+            <motion.div
+              key="topology"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 1.05 }}
+              className="h-full"
+            >
+              <KnowledgeMap 
+                userId={userId} 
+                uploadId={uploadId}
+                onSelectConcept={(name) => {
+                  // Fallback to chat or just highlight
+                  console.log("Exploring concept:", name)
+                }} 
+              />
+            </motion.div>
+          )}
+
           {/* QUIZ TAB */}
           {activeTab === 'quiz' && (
             <motion.div
@@ -274,37 +300,40 @@ export default function StudyLab({ uploadId, userId, onBack }) {
                       {packageData.questions[quizIdx]?.question}
                     </h3>
                   </div>
-
                   <div className="space-y-4">
-                    <p className="text-white/30 text-xs italic mb-8">Take a moment to formulate your answer, then verify below.</p>
-                    
-                    <button 
-                      onClick={() => handleQuizAnswer(true)}
-                      className="w-full group relative p-6 rounded-3xl bg-white/5 border border-white/5 hover:bg-white text-left transition-all duration-500 overflow-hidden"
-                    >
-                      <div className="relative z-10 flex items-center justify-between group-hover:text-black transition-colors">
-                        <span className="text-lg font-medium tracking-tight">I knew this answer</span>
-                        <CheckCircle2 size={24} className="text-white/20 group-hover:text-black/40" />
+                    {packageData.questions[quizIdx]?.options ? (
+                      packageData.questions[quizIdx].options.map((opt, i) => (
+                        <button 
+                          key={i}
+                          onClick={() => handleQuizAnswer(opt)}
+                          className="w-full group relative p-5 rounded-2xl bg-white/5 border border-white/5 hover:bg-white text-left transition-all duration-300 overflow-hidden"
+                        >
+                          <div className="flex items-center gap-4 relative z-10 group-hover:text-black transition-colors">
+                             <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center text-[10px] font-bold group-hover:bg-black/10 group-hover:text-black">
+                                {String.fromCharCode(65 + i)}
+                             </div>
+                             <span className="text-lg font-medium">{opt}</span>
+                          </div>
+                        </button>
+                      ))
+                    ) : (
+                      // Legacy Falback
+                      <div className="space-y-4">
+                        <button onClick={() => handleQuizAnswer(true)} className="w-full p-6 rounded-3xl bg-white/5 border border-white/5 hover:bg-white text-left transition-all group">
+                             <span className="group-hover:text-black text-lg">Correct (Legacy)</span>
+                        </button>
+                        <button onClick={() => handleQuizAnswer(false)} className="w-full p-6 rounded-3xl bg-white/5 border border-white/5 hover:bg-white text-left transition-all group">
+                             <span className="group-hover:text-black text-lg">Incorrect (Legacy)</span>
+                        </button>
                       </div>
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </button>
-
-                    <button 
-                      onClick={() => handleQuizAnswer(false)}
-                      className="w-full group p-6 rounded-3xl bg-white/5 border border-white/5 hover:border-white/10 text-left transition-all"
-                    >
-                      <div className="flex items-center justify-between text-white/40 group-hover:text-white transition-colors">
-                        <span className="text-lg font-medium tracking-tight">I need to review this</span>
-                        <X size={24} className="opacity-40" />
-                      </div>
-                    </button>
+                    )}
                     
                     <div className="mt-8 p-6 bg-white/[0.02] border border-white/5 rounded-2xl">
                         <h5 className="text-[10px] font-bold tracking-widest uppercase text-white/20 mb-3 flex items-center gap-2">
-                            <Sparkles size={12} /> Model Answer Preview
+                            <Sparkles size={12} /> Insight
                         </h5>
                         <p className="text-sm text-white/50 leading-relaxed italic">
-                            "{packageData.questions[quizIdx]?.model_answer.slice(0, 100)}..."
+                            {packageData.questions[quizIdx]?.explanation || "Study this concept to master its foundational nodes."}
                         </p>
                     </div>
                   </div>

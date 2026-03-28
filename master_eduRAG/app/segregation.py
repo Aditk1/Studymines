@@ -12,7 +12,8 @@ class ContentSegregator:
     def __init__(self, api_key: Optional[str] = None):
         if api_key:
             genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel("gemini-2.0-flash")
+        from app.config import DEFAULT_MODEL
+        self.model = genai.GenerativeModel(DEFAULT_MODEL)
 
     def manual_segregate(self, subject: str, topic: str) -> Dict[str, str]:
         return {"subject": subject.strip(), "topic": topic.strip(), "method": "manual"}

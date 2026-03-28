@@ -29,6 +29,8 @@ class Classroom(Base):
     
     members = relationship("ClassroomMember", back_populates="classroom", cascade="all, delete-orphan")
     materials = relationship("LMSMaterial", back_populates="classroom", cascade="all, delete-orphan")
+    from app.models import Assessment # Local import to avoid circularity if any
+    assessments = relationship("Assessment", back_populates="classroom", cascade="all, delete-orphan")
 
 class ClassroomMember(Base):
     __tablename__ = "lms_classroom_members"

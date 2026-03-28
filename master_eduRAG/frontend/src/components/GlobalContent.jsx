@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import axios from 'axios'
 
-export default function Content({ user, onOpenArtifact }) {
+export default function GlobalContent({ user, onOpenArtifact }) {
   const [materials, setMaterials] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -27,13 +27,14 @@ export default function Content({ user, onOpenArtifact }) {
     fetchMaterials()
   }, [])
 
-  const filteredMaterials = (materials || []).filter(m => {
-    const matchesSearch = (m.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          (m.subject || '').toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredMaterials = materials.filter(m => {
+    const matchesSearch = m.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          m.subject.toLowerCase().includes(searchQuery.toLowerCase())
     if (selectedFilter === 'all') return matchesSearch
     return matchesSearch && m.subject.toLowerCase() === selectedFilter.toLowerCase()
   })
 
+  // Group by subject for the filter pill list
   const subjects = ['all', ...new Set(materials.map(m => m.subject))]
 
   return (
@@ -62,6 +63,7 @@ export default function Content({ user, onOpenArtifact }) {
         </div>
       </header>
 
+      {/* FILTER PILLS */}
       <div className="flex items-center gap-2 flex-wrap pb-2 no-scrollbar">
           {subjects.map(sub => (
             <button 
@@ -94,6 +96,7 @@ export default function Content({ user, onOpenArtifact }) {
                         onClick={() => onOpenArtifact(artifact.id)}
                         className="liquid-glass rounded-[2.5rem] p-8 flex flex-col min-h-[16rem] group cursor-pointer hover:bg-white/[0.04] border border-white/5 hover:border-white/20 transition-all relative overflow-hidden"
                     >
+                        {/* Background flourish */}
                         <div className="absolute -top-10 -right-10 w-32 h-32 bg-white/[0.02] rounded-full blur-3xl group-hover:bg-white/[0.05] transition-colors" />
 
                         <div className="flex items-start justify-between mb-6 relative z-10">

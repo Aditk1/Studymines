@@ -1,0 +1,102 @@
+import json
+import requests
+import random
+from typing import List, Dict, Optional
+from datetime import datetime
+from sqlalchemy.orm import Session
+from app.models import Upload, QuestionBank, GraphEntity
+
+OLLAMA_URL = "http://localhost:11434/api/generate"
+MODEL_NAME = "llama3"
+
+def CognitiveAIGenerator(
+    topic: str,
+    context_type: str = "general", # 'general', 'document', 'mastery'
+    num_items: int = 5,
+    difficulty: str = "medium",
+    upload_id: Optional[int] = None,
+    db: Optional[Session] = None
+) -> List[Dict]:
+    """
+    Universal AI generator for Quizzes, Exams, and Lesson Plans.
+    
+    Args:
+        topic: The primary subject (e.g., 'Quantum Physics').
+        context_type: Affects the source of knowledge.
+        num_items: Total questions to generate.
+        difficulty: cognitive level (easy, medium, hard).
+        upload_id: If document-specific, fetch text from the upload.
+        db: Database session for context retrieval.
+        
+    Returns:
+        List of generated items (questions, answers, options).
+    """
+    system_context = ""
+    
+    # 1. ENRICH CONTEXT
+    if context_type == "document" and upload_id and db:
+        upload = db.query(Upload).filter(Upload.id == upload_id).first()
+        if upload and upload.study_package:
+            # Extract key concepts from existing package for grounding
+            pkg = json.loads(upload.study_package)
+            system_context = f"Based on this document: {pkg.get('topic', 'N/A')}. Context snippet: {pkg.get('summary', '')[:2000]}"
+    
+    elif context_type == "mastery" and db:
+        # Fetch weak concepts from the GraphRAG layer
+        weak_entities = db.query(GraphEntity).filter(GraphEntity.mastery_score < 0.5).limit(3).all()
+        if weak_entities:
+            concepts = ", ".join([e.name for e in weak_entities])
+            system_context = f"Focus on these challenging student concepts: {concepts}."
+
+    # 2. CONSTRUCT PROMPT
+    prompt = f"""
+    You are an expert academic examiner. Generate {num_items} high-quality Multiple Choice Questions (MCQs) for the topic: '{topic}'.
+    Difficulty: {difficulty}.
+    {system_context}
+    
+    Return ONLY a valid JSON list in this EXACT format:
+    [
+      {{
+        "question": "Clear and concise question text?",
+        "options": ["Option A", "Option B", "Option C", "Option D"],
+        "answer": "The correct option exactly as written",
+        "explanation": "Brief pedagogical explanation why this is correct.",
+        "bloom_level": "apply"
+      }}
+    ]
+    Do not include any conversational text before or after the JSON.
+    """
+
+    # 3. CALL LLM (OLLAMA / LLAMA3)
+    try:
+        response = requests.post(OLLAMA_URL, json={
+            "model": MODEL_NAME,
+            "prompt": prompt,
+            "stream": False,
+            "format": "json"
+        }, timeout=60)
+        
+        if response.status_code == 200:
+            result = response.json().get('response', '')
+            # Clean response for JSON parsing
+            cleaned_result = result.strip()
+            if cleaned_result.startswith('```json'):
+                cleaned_result = cleaned_result.replace('```json', '').replace('```', '')
+            
+            generated_data = json.loads(cleaned_result)
+            return generated_data if isinstance(generated_data, list) else []
+            
+    except Exception as e:
+        print(f"CognitiveAIGenerator - Error calling Ollama: {e}")
+        # Fallback to static dummy for demo if LLM is offline
+        return [
+            {
+                "question": f"Synthesized question about {topic} (Demo Fallback)",
+                "options": ["A", "B", "C", "D"],
+                "answer": "A",
+                "explanation": "Generator fallback activated due to connection issues.",
+                "bloom_level": "remember"
+            }
+        ]
+    
+    return []

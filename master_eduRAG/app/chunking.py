@@ -152,7 +152,8 @@ async def chunk_and_process(
     try:
         from app.bridge import process_with_rag
         print("💡 Enriching study package with RLM-GraphRAG Cognitive Core...")
-        return await process_with_rag(text, source_name, study_package)
+        pkg, stats = await process_with_rag(text, source_name, study_package)
+        return {"package": pkg, "stats": stats}
     except Exception as e:
         print(f"⚠ RAG enrichment skipped: {e}")
-        return study_package
+        return {"package": study_package, "stats": {}}

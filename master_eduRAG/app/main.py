@@ -23,11 +23,11 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-import os, tempfile, json, uuid, shutil
+import os, tempfile, json, uuid, shutil, cv2
 from typing import Optional
 
 from app.database import init_db, get_db
-from app.models import User, Upload, Performance, GraphEntity
+from app.models import User, Upload, Performance, GraphEntity, EventLog, Usage
 from app.parsers.document_parser import parse_document
 from app.vision.image_preprocessor import ImagePreprocessor
 from app.vision.vision_extractor import extract_from_image
@@ -218,14 +218,19 @@ async def upload_document(
     student_level: str = Form("undergraduate"),
     db: Session = Depends(get_db),
 ):
+    print(f"DEBUG_UPLOAD_DOC: Received doc='{file.filename}' for user='{user_id}'")
     try:
         user = _resolve_user(user_id, db, student_level)
+        print(f"DEBUG_UPLOAD_DOC: User resolved: {user.id if user else 'NONE'}")
+        
         content = await file.read()
         if len(content) > MAX_FILE_SIZE:
-            raise HTTPException(status_code=413, detail="File too large")
+             print(f"DEBUG_UPLOAD_DOC: File too large")
+             raise HTTPException(status_code=413, detail="File too large")
 
         file_ext = (file.filename or "").rsplit(".", 1)[-1].lower()
         if file_ext not in ALLOWED_DOCUMENT_TYPES:
+            print(f"DEBUG_UPLOAD_DOC: Unsupported extension '{file_ext}'")
             raise HTTPException(status_code=400, detail=f"Unsupported type: {file_ext}")
 
         # Generate permanent storage path
@@ -234,21 +239,29 @@ async def upload_document(
         unique_filename = f"{uuid.uuid4()}_{file.filename}"
         permanent_path = os.path.join(save_dir, unique_filename)
 
+        print(f"DEBUG_UPLOAD_DOC: Saving to {permanent_path}")
         with open(permanent_path, "wb") as f:
             f.write(content)
 
         try:
+            print(f"DEBUG_UPLOAD_DOC: Parsing document...")
             parsed = parse_document(permanent_path)
+            
+            print(f"DEBUG_UPLOAD_DOC: Preprocessing and Segregating...")
             text = preprocess_text(parsed["text"])
             segregation = segregate_content(text, subject, topic, file.filename)
 
-            study_package = await chunk_and_process(
+            print(f"DEBUG_UPLOAD_DOC: Generating study package...")
+            raw_res = await chunk_and_process(
                 text, student_level,
                 segregation.get("subject"), segregation.get("topic"),
                 source_name=file.filename,
             )
+            study_package = raw_res["package"]
+            graph_stats = raw_res["stats"]
 
             # Persist
+            print(f"DEBUG_UPLOAD_DOC: Saving record to DB...")
             graph_meta = study_package.get("graph_metadata", {})
             upload_rec = Upload(
                 user_id=user.id, file_name=file.filename,
@@ -260,18 +273,39 @@ async def upload_document(
                 graph_triples_count=graph_meta.get("triples_count"),
                 graph_confidence=graph_meta.get("extraction_confidence"),
             )
-            db.add(upload_rec); db.commit()
+            db.add(upload_rec)
+            db.commit()
+            db.refresh(upload_rec)
+
+            # --- Synchronize Graph Entities ---
+            print(f"DEBUG_UPLOAD_DOC: Syncing {len(graph_stats.get('nodes', []))} nodes...")
+            from app.models import GraphEntity
+            for node_name in graph_stats.get("nodes", []):
+                entity = GraphEntity(
+                    upload_id=upload_rec.id,
+                    entity_name=str(node_name),
+                    entity_type="concept",
+                    confidence=graph_stats.get("confidence_ratio", 1.0)
+                )
+                db.add(entity)
+            db.commit()
+
+            print(f"DEBUG_UPLOAD_DOC: Success record_id={upload_rec.id}")
 
             return {"success": True, "upload_id": upload_rec.id, "file_name": file.filename,
                     "segregation": segregation, "study_package": study_package}
-        except Exception:
-            # Clean up on process failure if needed
-            # if os.path.exists(permanent_path): os.unlink(permanent_path)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"DEBUG_UPLOAD_DOC inner Exception: {e}")
             raise
 
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"DEBUG_UPLOAD_DOC major Exception: {e}")
         return JSONResponse(status_code=400, content={"success": False, "error": str(e)})
 
 
@@ -288,29 +322,42 @@ async def upload_image(
     student_level: str = Form("undergraduate"),
     db: Session = Depends(get_db),
 ):
+    print(f"DEBUG_UPLOAD_IMAGE: Received image upload for user_id='{user_id}'")
     try:
         user = _resolve_user(user_id, db, student_level)
+        print(f"DEBUG_UPLOAD_IMAGE: User resolved: id={user.id if user else 'NONE'}")
+        
         content = await file.read()
         if len(content) > MAX_IMAGE_SIZE:
+            print(f"DEBUG_UPLOAD_IMAGE: Image too large ({len(content)} bytes)")
             raise HTTPException(status_code=413, detail="Image too large")
 
         file_ext = (file.filename or "").rsplit(".", 1)[-1].lower()
         if file_ext not in ALLOWED_IMAGE_TYPES:
+            print(f"DEBUG_UPLOAD_IMAGE: Unsupported type '{file_ext}'")
             raise HTTPException(status_code=400, detail=f"Unsupported image type: {file_ext}")
 
+        # Generate permanent storage path - Force .jpg for better compatibility
         save_dir = "data/uploads"
         os.makedirs(save_dir, exist_ok=True)
-        unique_filename = f"{uuid.uuid4()}_{file.filename}"
+        unique_filename = f"{uuid.uuid4()}.jpg"
         permanent_path = os.path.join(save_dir, unique_filename)
 
+        print(f"DEBUG_UPLOAD_IMAGE: Saving image to {permanent_path}")
         with open(permanent_path, "wb") as f:
             f.write(content)
 
         try:
-            ImagePreprocessor.preprocess(permanent_path)
+            print(f"DEBUG_UPLOAD_IMAGE: Preprocessing...")
+            preprocessed = ImagePreprocessor.preprocess(permanent_path)
+            cv2.imwrite(permanent_path, preprocessed)
+            
+            print(f"DEBUG_UPLOAD_IMAGE: Extracting from image...")
             extraction = extract_from_image(permanent_path)
+            print(f"DEBUG_UPLOAD_IMAGE: Extraction complete. Text length: {len(extraction.get('extracted_text', ''))}")
 
             if not extraction.get("extracted_text"):
+                print(f"DEBUG_UPLOAD_IMAGE: Error extraction text is empty.")
                 raise ValueError("Failed to extract text from image.")
 
             legibility_warning = None
@@ -319,24 +366,43 @@ async def upload_image(
 
             text = preprocess_text(extraction["extracted_text"])
             segregation = segregate_content(text, subject, topic, file.filename)
+            print(f"DEBUG_UPLOAD_IMAGE: Segregation: {segregation}")
 
-            study_package = await chunk_and_process(
+            print(f"DEBUG_UPLOAD_IMAGE: Chunking and processing study package...")
+            raw_res = await chunk_and_process(
                 text, student_level,
                 segregation.get("subject"), segregation.get("topic"),
                 source_name=file.filename,
             )
+            study_package = raw_res["package"]
+            graph_stats = raw_res["stats"]
 
-            graph_meta = study_package.get("graph_metadata", {})
+            print(f"DEBUG_UPLOAD_IMAGE: Creating record for user_id={user.id}")
             upload_rec = Upload(
                 user_id=user.id, file_name=file.filename, file_type="image",
                 subject=segregation.get("subject"), topic=segregation.get("topic"),
                 file_path=permanent_path,
                 study_package=json.dumps(study_package),
-                graph_path=graph_meta.get("graph_path"),
-                graph_triples_count=graph_meta.get("triples_count"),
-                graph_confidence=graph_meta.get("extraction_confidence"),
+                graph_path=graph_stats.get("graph_path"),
+                graph_triples_count=graph_stats.get("num_triples"),
+                graph_confidence=graph_stats.get("extraction_confidence"),
             )
-            db.add(upload_rec); db.commit()
+            db.add(upload_rec)
+            db.commit()
+            db.refresh(upload_rec)
+
+            # --- Synchronize Graph Entities ---
+            from app.models import GraphEntity
+            for node_name in graph_stats.get("nodes", []):
+                entity = GraphEntity(
+                    upload_id=upload_rec.id,
+                    entity_name=str(node_name),
+                    entity_type="vision_concept"
+                )
+                db.add(entity)
+            db.commit()
+
+            print(f"DEBUG_UPLOAD_IMAGE: success record_id={upload_rec.id}")
 
             resp = {"success": True, "upload_id": upload_rec.id, "file_name": file.filename,
                     "extraction_confidence": extraction.get("confidence"),
@@ -344,12 +410,18 @@ async def upload_image(
             if legibility_warning:
                 resp["legibility_warning"] = legibility_warning
             return resp
-        except Exception:
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            print(f"DEBUG_UPLOAD_IMAGE inner Exception: {e}")
             raise
 
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"DEBUG_UPLOAD_IMAGE major Exception: {e}")
         return JSONResponse(status_code=400, content={"success": False, "error": str(e)})
 
 
@@ -427,8 +499,15 @@ async def get_user_dashboard(user_id: str, db: Session = Depends(get_db)):
     uploads = db.query(Upload).filter(Upload.user_id == user.id).all()
     performance = db.query(Performance).filter(Performance.user_id == user.id).all()
 
+    # Calculate study hours from event logs (mocked for now, but linked to log count)
+    log_count = db.query(EventLog).filter(EventLog.user_id == user.id).count()
+    study_hours = round(log_count * 0.15, 1) # ~9 mins per logged event
+
     return {
-        "user": {"id": user.id, "name": user.name, "email": user.email, "student_level": user.student_level},
+        "user": {
+            "id": user.id, "name": user.name, "email": user.email, 
+            "student_level": user.student_level, "role": user.role
+        },
         "uploads": [
             {"id": u.id, "file_name": u.file_name, "subject": u.subject, "topic": u.topic,
              "graph_path": u.graph_path, "created_at": u.uploaded_at.isoformat()}
@@ -438,7 +517,25 @@ async def get_user_dashboard(user_id: str, db: Session = Depends(get_db)):
         "performance": {
             "avg_score": sum(p.score for p in performance) / len(performance) if performance else 0,
             "total_scores": len(performance),
+            "study_hours": study_hours
         },
+    }
+
+@app.get("/api/v1/stats/ecosystem")
+async def get_ecosystem_stats(db: Session = Depends(get_db)):
+    """Global aggregate stats for the sidebar."""
+    from app.models import GraphEntity
+    
+    total_users = db.query(User).count()
+    total_uploads = db.query(Upload).count()
+    avg_mastery = db.query(func.avg(GraphEntity.mastery_score)).scalar() or 0.8
+    
+    return {
+        "knowledge_retained": round(float(avg_mastery) * 100, 1),
+        "total_study_hours": round(db.query(EventLog).count() * 0.12, 1),
+        "total_users": total_users,
+        "total_artifacts": total_uploads,
+        "active_now": 28 # Static for now, or could count last_active_at < 5 mins
     }
 
 
@@ -497,7 +594,33 @@ async def record_performance(
     user = _resolve_user(user_id, db)
     perf = Performance(user_id=user.id, upload_id=upload_id, score=score, notes=notes)
     db.add(perf); db.commit(); db.refresh(perf)
+    
+    # --- LMS BRIDGE: Update Mastery for all linked graph entities ---
+    from app.lms.risk_engine import update_mastery_from_quiz, RiskEngine
+    entities = db.query(GraphEntity).filter(GraphEntity.upload_id == upload_id).all()
+    for ent in entities:
+        # Update specific mastery log
+        from app.models import MasteryLog
+        new_log = MasteryLog(
+            user_id=user.id,
+            entity_id=ent.id,
+            score=score / 100.0 if score > 1.0 else score,
+            source_type="assessment"
+        )
+        db.add(new_log)
+        
+        # Also update the entity's global mastery score (rolling weight)
+        new_mastery = (ent.mastery_score * 0.4) + ( (score/100.0) * 0.6 )
+        ent.mastery_score = round(new_mastery, 2)
+    db.commit()
+
+    # --- Analytics & Risk Detection: Recalculate if part of a course or classroom ---
+    # Trigger global risk engine evaluation for the user (Course 0 as unlisted)
+    engine = RiskEngine(db)
+    await engine.analyze_student(user.id, 0)
+
     return {"success": True, "performance_id": perf.id}
+
 
 
 @app.get("/api/v1/research/metrics")

@@ -11,7 +11,8 @@ import {
   Menu,
   Sparkles,
   Beaker,
-  User as UserIcon
+  User as UserIcon,
+  X
 } from 'lucide-react'
 import Upload from './components/Upload'
 import Dashboard from './components/Dashboard'
@@ -27,13 +28,29 @@ import Content from './components/Content'
 import GlobalChat from './components/GlobalChat'
 import Assignments from './components/Assignments'
 import Members from './components/Members'
-import { FileText, Users, MessageSquare, BookOpen } from 'lucide-react'
+import TeacherStudio from './components/TeacherStudio'
+import Scheduler from './components/Scheduler'
+import { FileText, Users, MessageSquare, BookOpen, PenTool, Calendar } from 'lucide-react'
 import axios from 'axios'
 
 function App() {
   const [user, setUser] = useState(null)
-  const [currentPage, setCurrentPage] = useState('upload')
-  const [selectedUploadId, setSelectedUploadId] = useState(null)
+  const [ecosystemStats, setEcosystemStats] = useState({ knowledge_retained: 84.2, total_study_hours: 124.5, total_users: 1204, active_now: 28 })
+  const [currentPage, setCurrentPage] = useState(() => localStorage.getItem('studymines_page') || 'upload')
+  const [selectedUploadId, setSelectedUploadId] = useState(() => localStorage.getItem('studymines_upload_id') || null)
+
+  // Persist Page State
+  useEffect(() => {
+    localStorage.setItem('studymines_page', currentPage)
+  }, [currentPage])
+
+  useEffect(() => {
+    if (selectedUploadId) {
+      localStorage.setItem('studymines_upload_id', selectedUploadId)
+    } else {
+      localStorage.removeItem('studymines_upload_id')
+    }
+  }, [selectedUploadId])
 
   // Configure global axios interceptor for auth
   useEffect(() => {
@@ -51,6 +68,20 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await axios.get('/api/v1/stats/ecosystem')
+        setEcosystemStats(res.data)
+      } catch (err) {
+        console.error("Failed to fetch ecosystem stats", err)
+      }
+    }
+    fetchStats()
+    const interval = setInterval(fetchStats, 60000)
+    return () => clearInterval(interval)
+  }, [])
+
   const handleLogin = (userData, token) => {
     setUser(userData)
     localStorage.setItem('studymines_user', JSON.stringify(userData))
@@ -64,21 +95,27 @@ function App() {
     setUser(null)
     localStorage.removeItem('studymines_user')
     localStorage.removeItem('studymines_token')
+    localStorage.removeItem('studymines_page')
+    localStorage.removeItem('studymines_upload_id')
     delete axios.defaults.headers.common['Authorization']
     setCurrentPage('upload')
+    setSelectedUploadId(null)
   }
 
   const navItems = user?.role === 'teacher' 
     ? [
         { id: 'classrooms', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'studio', label: 'Studio', icon: PenTool },
         { id: 'content', label: 'Content', icon: BookOpen },
         { id: 'chat', label: 'Discussions', icon: MessageSquare },
+        { id: 'scheduler', label: 'Scheduler', icon: Calendar },
         { id: 'assignments', label: 'Assignments', icon: FileText },
         { id: 'analytics', label: 'Insights', icon: BarChart3 },
         { id: 'members', label: 'Members', icon: Users },
       ]
     : [
         { id: 'dashboard', label: 'Academy', icon: LayoutDashboard },
+        { id: 'scheduler', label: 'Reminders', icon: Calendar },
         { id: 'upload', label: 'Generate', icon: UploadIcon },
         { id: 'classrooms', label: 'My Classes', icon: UserIcon },
         { id: 'leaderboard', label: 'Ecosystem', icon: TrendingUp },
@@ -125,6 +162,7 @@ function App() {
           </div>
 
           <div className="flex-1 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2">
+             <div className="text-[10px] font-bold text-white/20 tracking-[0.5em] uppercase mb-2 px-4">Navigation Matrix</div>
              {navItems.map((item) => (
                <button
                  key={item.id}
@@ -195,10 +233,12 @@ function App() {
                 >
                   {currentPage === 'upload' && <Upload userId={user.id} onOpenArtifact={(id) => openArtifact(id)} />}
                   {currentPage === 'dashboard' && <Dashboard userId={user.id} onOpenArtifact={(id) => openArtifact(id)} />}
-                  {currentPage === 'classrooms' && <Classrooms user={user} onOpenArtifact={(id) => openArtifact(id)} />}
+                   {currentPage === 'classrooms' && <Classrooms user={user} onOpenArtifact={(id) => openArtifact(id)} />}
+                  {currentPage === 'studio' && <TeacherStudio user={user} />}
                   {currentPage === 'analytics' && <Analytics user={user} />}
                   {currentPage === 'content' && <Content user={user} onOpenArtifact={(id) => openArtifact(id)} />}
                   {currentPage === 'chat' && <GlobalChat user={user} />}
+                  {currentPage === 'scheduler' && <Scheduler user={user} />}
                   {currentPage === 'assignments' && <Assignments user={user} />}
                   {currentPage === 'members' && <Members user={user} />}
                   {currentPage === 'leaderboard' && <Leaderboard />}
@@ -233,18 +273,18 @@ function App() {
             <div className="space-y-4">
               <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
                 <div className="text-xs text-white/40 mb-1">Knowledge Retained</div>
-                <div className="text-2xl font-semibold">84.2%</div>
+                <div className="text-2xl font-semibold">{ecosystemStats.knowledge_retained}%</div>
                 <div className="h-1 w-full bg-white/5 rounded-full mt-3 overflow-hidden">
                   <motion.div 
                     initial={{ width: 0 }}
-                    animate={{ width: '84.2%' }}
+                    animate={{ width: `${ecosystemStats.knowledge_retained}%` }}
                     className="h-full bg-white/40"
                   />
                 </div>
               </div>
               <div className="p-4 rounded-2xl bg-white/5 border border-white/5">
-                <div className="text-xs text-white/40 mb-1">Study Hours</div>
-                <div className="text-2xl font-semibold">124.5<em> hrs</em></div>
+                <div className="text-xs text-white/40 mb-1">Study Hours (Total)</div>
+                <div className="text-2xl font-semibold">{ecosystemStats.total_study_hours}<em> hrs</em></div>
               </div>
             </div>
           </motion.div>
@@ -270,7 +310,7 @@ function App() {
                     <circle cx="50" cy="50" r="40" stroke="#f97316" strokeWidth="12" fill="none" strokeDasharray="251" strokeDashoffset="40" className="animate-pulse" />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-light">1,204</span>
+                    <span className="text-3xl font-light">{ecosystemStats.total_users?.toLocaleString()}</span>
                     <span className="text-[10px] text-white/40 uppercase tracking-widest mt-1">Total Users</span>
                   </div>
                  </div>
@@ -317,6 +357,70 @@ function App() {
 
       {/* GLOBAL COGNITIVE CONSULTANT (CHABOT) */}
       <Chatbot user={user} uploadId={selectedUploadId} />
+
+      {/* MILESTONES DRAWER */}
+      <AnimatePresence>
+        {currentPage === 'milestones' && (
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed inset-y-0 right-0 w-full lg:w-[450px] z-[200] liquid-glass-strong border-l border-white/10 shadow-2xl p-10 overflow-y-auto"
+          >
+            <div className="flex items-center justify-between mb-12">
+                <h3 className="text-3xl font-medium tracking-tighter">Cognitive <br /> <em className="text-white/60">Milestones</em></h3>
+                <button 
+                  onClick={() => setCurrentPage('dashboard')}
+                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+            </div>
+
+            <div className="space-y-12">
+                {/* LEVEL SECTION */}
+                <div className="text-center">
+                    <div className="relative inline-block">
+                        <svg viewBox="0 0 100 100" className="w-40 h-40 transform -rotate-90">
+                            <circle cx="50" cy="50" r="45" stroke="rgba(255,255,255,0.05)" strokeWidth="4" fill="none" />
+                            <motion.circle 
+                                initial={{ strokeDasharray: "0 283" }}
+                                animate={{ strokeDasharray: "180 283" }}
+                                cx="50" cy="50" r="45" stroke="white" strokeWidth="4" fill="none" strokeLinecap="round" 
+                            />
+                        </svg>
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <span className="text-sm font-bold tracking-[0.4em] uppercase text-white/30 mb-1">Rank</span>
+                            <span className="text-4xl font-bold tracking-tighter">Gold II</span>
+                        </div>
+                    </div>
+                    <p className="text-xs text-white/40 mt-6 tracking-widest uppercase">840 XP to Diamond Tier</p>
+                </div>
+
+                {/* BADGES */}
+                <div className="space-y-6">
+                    <h4 className="text-[10px] font-bold tracking-[0.3em] uppercase text-white/20">Unlocked Axioms</h4>
+                    <div className="grid grid-cols-2 gap-4">
+                        {[
+                            { name: 'Graph Architect', icon: Sparkles, color: 'bg-blue-500/20' },
+                            { name: 'Recall Master', icon: Target, color: 'bg-orange-500/20' },
+                            { name: 'Semantic Sage', icon: BookOpen, color: 'bg-purple-500/20' },
+                            { name: 'Consistent Growth', icon: TrendingUp, color: 'bg-green-500/20' }
+                        ].map((badge, idx) => (
+                            <div key={idx} className="p-5 rounded-3xl bg-white/[0.03] border border-white/5 flex flex-col items-center text-center group hover:bg-white/5 transition-all">
+                                <div className={`w-12 h-12 ${badge.color} rounded-2xl flex items-center justify-center mb-4 text-white/60 group-hover:scale-110 transition-transform`}>
+                                    <badge.icon size={24} />
+                                </div>
+                                <span className="text-xs font-semibold tracking-tight">{badge.name}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

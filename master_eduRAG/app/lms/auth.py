@@ -1,6 +1,7 @@
 import jwt
 from datetime import datetime, timedelta
 import os
+from typing import Optional
 from fastapi import HTTPException, Security, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -12,6 +13,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 1 week
 
 security = HTTPBearer()
+optional_security = HTTPBearer(auto_error=False)
 
 def detect_role_from_email(email: str) -> str:
     """Auto-detect student or teacher based on domain or keywords."""
@@ -41,10 +43,24 @@ def get_current_user(credentials: HTTPAuthorizationCredentials = Security(securi
     except Exception as e:
         print("JWT Decode error:", e)
         raise HTTPException(status_code=401, detail="Could not validate credentials")
+    
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise HTTPException(status_code=401, detail="User not found")
     return user
+
+def get_current_user_optional(credentials: Optional[HTTPAuthorizationCredentials] = Security(optional_security), db: Session = Depends(get_db)):
+    if not credentials:
+        return None
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
+        user_id_str: str = payload.get("sub")
+        if user_id_str:
+            return db.query(User).filter(User.id == user_id_str).first()
+    except Exception:
+        return None
+    return None
 
 def require_role(allowed_roles: list[str]):
     def role_checker(current_user: User = Depends(get_current_user)):

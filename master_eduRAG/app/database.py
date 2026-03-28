@@ -28,7 +28,11 @@ def get_db():
 
 def init_db():
     """Create all tables."""
-    from app.models import User, Upload, Performance, Usage, GraphEntity
+    from app.models import (
+        User, Upload, Performance, Usage, GraphEntity,
+        Course, Section, LessonModule, Enrollment, QuestionBank,
+        Assessment, AssessmentAttempt, AcademicRisk, EventLog, MasteryLog
+    )
     from app.lms.models import (
         Classroom, ClassroomMember, LMSMaterial, DocumentChunk, 
         ChatRoom, ChatMessage, Exam, ExamClassroom, ExamSubmission

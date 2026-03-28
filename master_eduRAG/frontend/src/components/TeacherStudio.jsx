@@ -152,8 +152,15 @@ export default function TeacherStudio({ user }) {
                                 {section.modules?.map((module) => (
                                     <div key={module.id} className="p-5 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between group">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center text-white/20"><BookOpen size={16} /></div>
-                                            <span className="text-sm font-medium">{module.title}</span>
+                                            <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center text-white/20">
+                                                {module.type === 'video' ? <Plus size={16} /> : 
+                                                 module.type === 'quiz' ? <Sparkles size={16} /> : 
+                                                 <BookOpen size={16} />}
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-medium">{module.title}</span>
+                                                <span className="text-[9px] text-white/20 font-bold uppercase tracking-widest">{module.type}</span>
+                                            </div>
                                         </div>
                                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                             <button 
@@ -166,6 +173,7 @@ export default function TeacherStudio({ user }) {
                                         </div>
                                     </div>
                                 ))}
+
                             </div>
                         ))}
                         {(!selectedCourse.sections || selectedCourse.sections.length === 0) && (

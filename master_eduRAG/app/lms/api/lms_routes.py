@@ -763,36 +763,31 @@ async def generate_universal_exam(
         course_id=data.course_id,
         classroom_id=data.classroom_id,
         title=data.title,
-        is_published=True
+        is_published=True,
+        question_ids=[]
     )
     db.add(new_exam)
     db.flush() # Get ID
     
+    q_ids = []
     # Create Question Bank entries and link to Assessment
     for q in questions:
         qb = QuestionBank(
             subject=data.topic,
             topic=data.topic,
             question_type="mcq",
-            content=q.get('question', ''),
-            options=json.dumps(q.get('options', [])),
-            answer=q.get('answer', ''),
-            explanation=q.get('explanation', ''),
-            avg_score=0.0
+            difficulty=2,
+            content=q # The dict from generator matches QuestionBank's JSON expectations
         )
         db.add(qb)
         db.flush()
-        
-        # Link to exam (Need to ensure Assessment model has relationship)
-        # Assuming for now it uses the current Assessment structure
-        # (Alternatively, store in a JSON field if relationship is missing)
-        # For simplicity in this demo, we'll store them in a JSON bank if no join table
+        q_ids.append(qb.id)
     
-    # Let's check Assessment model briefly in models.py to ensure we link correctly
-    # If Assessment model has no explicit questions relationship, we'll add it.
-    
+    # Update Assessment with linked question IDs
+    new_exam.question_ids = q_ids
     db.commit()
-    return {"success": True, "assessment_id": new_exam.id, "questions_count": len(questions)}
+    return {"success": True, "assessment_id": new_exam.id, "questions_count": len(q_ids)}
+
 
 class AssessmentSubmission(BaseModel):
     responses: dict
@@ -936,6 +931,65 @@ async def get_analytics_kpis(db: Session = Depends(get_db)):
         "concepts_monitored": concept_count,
         "global_mastery_pct": round(float(global_mastery) * 100, 1),
         "high_struggle_count": high_struggle
+    }
+
+@router.get("/learning-paths", tags=["Graph Visualizer"])
+async def get_recommended_learning_paths(
+    user_id: Optional[UUID] = None,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user_optional)
+):
+    """Dynamically calculates the recommended next modules/concepts based on KG mastery topology."""
+    target_id = user_id or (current_user.id if current_user else None)
+    if not target_id:
+        return {"recommendations": [], "message": "Login to see your personalized path."}
+
+    # 1. Identify "Weak" Concepts (Mastery < 0.5)
+    from app.models import GraphEntity, MasteryLog
+    
+    # Get all entities and their latest mastery for this user
+    entities = db.query(GraphEntity).all()
+    weak_concepts = []
+    
+    for ent in entities:
+        latest_log = db.query(MasteryLog).filter(
+            MasteryLog.user_id == target_id,
+            MasteryLog.entity_id == ent.id
+        ).order_by(MasteryLog.logged_at.desc()).first()
+        
+        score = latest_log.score if latest_log else ent.mastery_score
+        if score < 0.6: # Threshold for recommendation
+            weak_concepts.append({
+                "id": ent.id,
+                "name": ent.entity_name,
+                "score": score,
+                "type": ent.entity_type
+            })
+
+    # Sort by lowest score first
+    weak_concepts.sort(key=lambda x: x["score"])
+
+    # 2. Map concepts to Modules
+    # For now, we'll suggest general "Review" actions if no direct module mapping
+    # But we can look for LessonModules that mention these concept names
+    recommendations = []
+    for concept in weak_concepts[:3]:
+        # Try to find a module that contains this concept name in its title
+        module = db.query(LessonModule).filter(LessonModule.title.ilike(f"%{concept['name']}%")).first()
+        
+        recommendations.append({
+            "concept_id": concept["id"],
+            "concept_name": concept["name"],
+            "current_mastery": round(concept["score"] * 100, 1),
+            "suggested_action": f"Review {concept['name']} foundations" if not module else f"Study Module: {module.title}",
+            "priority": "high" if concept["score"] < 0.3 else "medium",
+            "module_id": module.id if module else None
+        })
+
+    return {
+        "user_id": str(target_id),
+        "recommendations": recommendations,
+        "path_status": "at_risk" if any(r["priority"] == "high" for r in recommendations) else "stable"
     }
 
 @router.get("/chats/global", tags=["Communication Matrix"])

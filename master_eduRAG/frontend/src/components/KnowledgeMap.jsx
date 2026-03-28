@@ -173,6 +173,44 @@ export default function KnowledgeMap({ userId, uploadId, onSelectConcept }) {
             {data.nodes.length} Neural Intersections
         </div>
       </div>
+
+      {/* RECOMMENDED PATH OVERLAY */}
+      <div className="absolute bottom-6 left-6 max-w-[280px] pointer-events-auto">
+        <div className="liquid-glass border border-white/5 rounded-2xl p-4 overflow-hidden">
+            <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/20 mb-3 flex items-center gap-2">
+                <Target size={12} /> Recommended Path
+            </div>
+            <div className="space-y-3">
+                <LearningPathList userId={userId} />
+            </div>
+        </div>
+      </div>
     </div>
   )
 }
+
+function LearningPathList({ userId }) {
+    const [paths, setPaths] = useState([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        axios.get('/api/v1/lms/learning-paths', { params: { user_id: userId } })
+            .then(res => setPaths(res.data.recommendations))
+            .finally(() => setLoading(false))
+    }, [userId])
+
+    if (loading) return <div className="text-[10px] text-white/10 italic">Calculating trajectory...</div>
+
+    return paths.map((p, i) => (
+        <div key={i} className="flex flex-col gap-1 p-2 rounded-xl bg-white/[0.03] border border-white/5 transition-all hover:bg-white/5 cursor-help">
+            <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-white/80">{p.concept_name}</span>
+                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${p.priority === 'high' ? 'bg-red-500/20 text-red-400' : 'bg-white/10 text-white/40'}`}>
+                    {p.current_mastery}%
+                </span>
+            </div>
+            <p className="text-[9px] text-white/40 italic leading-tight">{p.suggested_action}</p>
+        </div>
+    ))
+}
+

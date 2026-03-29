@@ -24,7 +24,7 @@ export default function TeacherStudio({ user }) {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
-        const res = await axios.get('/api/v1/lms/classrooms') // Mapping to classrooms for now
+        const res = await axios.get('/api/v1/lms/courses')
         setCourses(res.data)
       } catch (err) {
         console.error(err)
@@ -47,6 +47,7 @@ export default function TeacherStudio({ user }) {
         setNewCourseName('')
     } catch (err) {
         console.error("Creation failed", err)
+        alert("Failed to create course. Ensure backend is running.")
     }
   }
 
@@ -135,14 +136,18 @@ export default function TeacherStudio({ user }) {
                                          onClick={async () => {
                                              const title = prompt("Module Title?")
                                              if(!title) return
-                                             await axios.post(`/api/v1/lms/sections/${section.id}/modules`, {
-                                                 title,
-                                                 content_type: "document",
-                                                 order: section.modules?.length || 0
-                                             })
-                                             // Refresh courses or just this course
-                                             const res = await axios.get(`/api/v1/lms/courses/${selectedCourse.id}/modules`)
-                                             setSelectedCourse({...selectedCourse, sections: res.data})
+                                             try {
+                                                 await axios.post(`/api/v1/lms/sections/${section.id}/modules`, {
+                                                     title,
+                                                     content_type: "document",
+                                                     order: section.modules?.length || 0
+                                                 })
+                                                 const res = await axios.get(`/api/v1/lms/courses/${selectedCourse.id}/modules`)
+                                                 setSelectedCourse({...selectedCourse, sections: res.data})
+                                             } catch (err) {
+                                                 console.error(err)
+                                                 alert("Failed to add module")
+                                             }
                                          }}
                                          className="text-[10px] font-bold uppercase tracking-widest text-white/20 hover:text-white transition-colors"
                                      >
@@ -186,12 +191,17 @@ export default function TeacherStudio({ user }) {
                              onClick={async () => {
                                  const title = prompt("Section Title?")
                                  if(!title) return
-                                 await axios.post(`/api/v1/lms/courses/${selectedCourse.id}/sections`, {
-                                     title,
-                                     order: selectedCourse.sections?.length || 0
-                                 })
-                                 const res = await axios.get(`/api/v1/lms/courses/${selectedCourse.id}/modules`)
-                                 setSelectedCourse({...selectedCourse, sections: res.data})
+                                 try {
+                                     await axios.post(`/api/v1/lms/courses/${selectedCourse.id}/sections`, {
+                                         title,
+                                         order: selectedCourse.sections?.length || 0
+                                     })
+                                     const res = await axios.get(`/api/v1/lms/courses/${selectedCourse.id}/modules`)
+                                     setSelectedCourse({...selectedCourse, sections: res.data})
+                                 } catch(err) {
+                                     console.error(err)
+                                     alert("Failed to add section")
+                                 }
                              }}
                              className="flex items-center gap-2 bg-white/5 hover:bg-white/10 px-6 py-3 rounded-xl text-sm font-bold transition-all text-white/60"
                          >

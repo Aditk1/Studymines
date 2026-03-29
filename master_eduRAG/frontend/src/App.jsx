@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   BarChart3, 
@@ -27,6 +28,7 @@ import Analytics from './components/Analytics'
 import Content from './components/Content'
 import GlobalChat from './components/GlobalChat'
 import Assignments from './components/Assignments'
+import AssessmentView from './components/AssessmentView'
 import Members from './components/Members'
 import TeacherStudio from './components/TeacherStudio'
 import Scheduler from './components/Scheduler'
@@ -34,15 +36,15 @@ import { FileText, Users, MessageSquare, BookOpen, PenTool, Calendar } from 'luc
 import axios from 'axios'
 
 function App() {
+  const navigate = useNavigate()
+  const location = useLocation()
+  
   const [user, setUser] = useState(null)
   const [ecosystemStats, setEcosystemStats] = useState({ knowledge_retained: 84.2, total_study_hours: 124.5, total_users: 1204, active_now: 28 })
-  const [currentPage, setCurrentPage] = useState(() => localStorage.getItem('studymines_page') || 'upload')
+  
+  // Keep track of active artifacts
   const [selectedUploadId, setSelectedUploadId] = useState(() => localStorage.getItem('studymines_upload_id') || null)
-
-  // Persist Page State
-  useEffect(() => {
-    localStorage.setItem('studymines_page', currentPage)
-  }, [currentPage])
+  const [selectedAssessmentId, setSelectedAssessmentId] = useState(null)
 
   useEffect(() => {
     if (selectedUploadId) {
@@ -95,36 +97,44 @@ function App() {
     setUser(null)
     localStorage.removeItem('studymines_user')
     localStorage.removeItem('studymines_token')
-    localStorage.removeItem('studymines_page')
     localStorage.removeItem('studymines_upload_id')
     delete axios.defaults.headers.common['Authorization']
-    setCurrentPage('upload')
     setSelectedUploadId(null)
+    navigate('/upload')
   }
 
   const navItems = user?.role === 'teacher' 
     ? [
-        { id: 'classrooms', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'classrooms', label: 'Classrooms', icon: UserIcon },
         { id: 'studio', label: 'Studio', icon: PenTool },
-        { id: 'content', label: 'Content', icon: BookOpen },
+        { id: 'library', label: 'Library', icon: BookOpen },
         { id: 'chat', label: 'Discussions', icon: MessageSquare },
         { id: 'scheduler', label: 'Scheduler', icon: Calendar },
         { id: 'assignments', label: 'Assignments', icon: FileText },
         { id: 'analytics', label: 'Insights', icon: BarChart3 },
         { id: 'members', label: 'Members', icon: Users },
+        { id: 'research', label: 'Research', icon: Beaker },
       ]
     : [
         { id: 'dashboard', label: 'Academy', icon: LayoutDashboard },
         { id: 'scheduler', label: 'Reminders', icon: Calendar },
         { id: 'upload', label: 'Generate', icon: UploadIcon },
         { id: 'classrooms', label: 'My Classes', icon: UserIcon },
+        { id: 'chat', label: 'Discussions', icon: MessageSquare },
+        { id: 'assignments', label: 'Assignments', icon: FileText },
         { id: 'leaderboard', label: 'Ecosystem', icon: TrendingUp },
         { id: 'research', label: 'Laboratory', icon: Beaker },
       ]
 
   const openArtifact = (id) => {
     setSelectedUploadId(id)
-    setCurrentPage('study-lab')
+    navigate('/study-lab')
+  }
+
+  const openAssessment = (id) => {
+    setSelectedAssessmentId(id)
+    navigate(`/exam/${id}`)
   }
 
   if (!user) {
@@ -167,12 +177,12 @@ function App() {
                <button
                  key={item.id}
                  onClick={() => {
-                   setCurrentPage(item.id)
+                   navigate(`/${item.id}`)
                    setSelectedUploadId(null)
                  }}
                  className={`
                    flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all duration-300
-                   ${(currentPage === item.id || (currentPage === 'study-lab' && item.id === 'dashboard'))
+                   ${(location.pathname === `/${item.id}` || (location.pathname === '/study-lab' && item.id === 'dashboard'))
                      ? 'bg-white/10 text-white shadow-[0_0_15px_rgba(255,255,255,0.1)]' 
                      : 'text-white/40 hover:text-white/70 hover:bg-white/5'}
                  `}
@@ -185,7 +195,7 @@ function App() {
 
           <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
             <button 
-              onClick={() => setCurrentPage('profile')}
+              onClick={() => navigate('/profile')}
               className="flex items-center gap-3 hover:bg-white/5 p-2 rounded-xl transition-colors min-w-0"
             >
               <div className="h-10 w-10 shrink-0 overflow-hidden rounded-full liquid-glass border border-white/10">
@@ -224,33 +234,43 @@ function App() {
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={currentPage + (selectedUploadId || '')}
+                  key={location.pathname + (selectedUploadId || '')}
                   initial={{ opacity: 0, scale: 0.98, x: -10 }}
                   animate={{ opacity: 1, scale: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 1.02, x: 10 }}
                   transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
                   className="h-full"
                 >
-                  {currentPage === 'upload' && <Upload userId={user.id} onOpenArtifact={(id) => openArtifact(id)} />}
-                  {currentPage === 'dashboard' && <Dashboard userId={user.id} onOpenArtifact={(id) => openArtifact(id)} />}
-                   {currentPage === 'classrooms' && <Classrooms user={user} onOpenArtifact={(id) => openArtifact(id)} />}
-                  {currentPage === 'studio' && <TeacherStudio user={user} />}
-                  {currentPage === 'analytics' && <Analytics user={user} />}
-                  {currentPage === 'content' && <Content user={user} onOpenArtifact={(id) => openArtifact(id)} />}
-                  {currentPage === 'chat' && <GlobalChat user={user} />}
-                  {currentPage === 'scheduler' && <Scheduler user={user} />}
-                  {currentPage === 'assignments' && <Assignments user={user} />}
-                  {currentPage === 'members' && <Members user={user} />}
-                  {currentPage === 'leaderboard' && <Leaderboard />}
-                  {currentPage === 'research' && <Research />}
-                  {currentPage === 'profile' && <Profile user={user} onLogout={handleLogout} />}
-                  {currentPage === 'study-lab' && (
-                    <StudyLab 
-                      uploadId={selectedUploadId} 
-                      userId={user.id} 
-                      onBack={() => setCurrentPage(user?.role === 'teacher' ? 'classrooms' : 'dashboard')} 
-                    />
-                  )}
+                  <Routes location={location} key={location.pathname}>
+                    <Route path="/" element={<Navigate to={user?.role === 'teacher' ? '/dashboard' : '/dashboard'} replace />} />
+                    <Route path="/upload" element={<Upload userId={user.id} onOpenArtifact={openArtifact} />} />
+                    <Route path="/dashboard" element={<Dashboard userId={user.id} onOpenArtifact={openArtifact} onOpenAssessment={openAssessment} />} />
+                    <Route path="/classrooms" element={<Classrooms user={user} onOpenArtifact={openArtifact} />} />
+                    <Route path="/studio" element={<TeacherStudio user={user} />} />
+                    <Route path="/analytics" element={<Analytics user={user} />} />
+                    <Route path="/library" element={<Content user={user} onOpenArtifact={openArtifact} />} />
+                    <Route path="/library/artifacts" element={<Content user={user} onOpenArtifact={openArtifact} />} />
+                    <Route path="/chat" element={<GlobalChat user={user} />} />
+                    <Route path="/scheduler" element={<Scheduler user={user} />} />
+                    <Route path="/assignments" element={<Assignments user={user} />} />
+                    <Route path="/members" element={<Members user={user} />} />
+                    <Route path="/leaderboard" element={<Leaderboard />} />
+                    <Route path="/research" element={<Research />} />
+                    <Route path="/profile" element={<Profile user={user} onLogout={handleLogout} />} />
+                    <Route path="/study-lab" element={
+                        selectedUploadId ? (
+                            <StudyLab 
+                              uploadId={selectedUploadId} 
+                              userId={user.id} 
+                              onBack={() => navigate(user?.role === 'teacher' ? '/classrooms' : '/dashboard')} 
+                            />
+                        ) : <Navigate to="/dashboard" replace />
+                    } />
+                    <Route path="/exam/:id" element={
+                        <AssessmentView userId={user.id} />
+                    } />
+                    <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                  </Routes>
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -360,7 +380,7 @@ function App() {
 
       {/* MILESTONES DRAWER */}
       <AnimatePresence>
-        {currentPage === 'milestones' && (
+        {location.pathname === '/milestones' && (
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
@@ -371,7 +391,7 @@ function App() {
             <div className="flex items-center justify-between mb-12">
                 <h3 className="text-3xl font-medium tracking-tighter">Cognitive <br /> <em className="text-white/60">Milestones</em></h3>
                 <button 
-                  onClick={() => setCurrentPage('dashboard')}
+                  onClick={() => navigate('/dashboard')}
                   className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors"
                 >
                   <X size={20} />

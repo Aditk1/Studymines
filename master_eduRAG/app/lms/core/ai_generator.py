@@ -84,19 +84,20 @@ def CognitiveAIGenerator(
                 cleaned_result = cleaned_result.replace('```json', '').replace('```', '')
             
             generated_data = json.loads(cleaned_result)
-            return generated_data if isinstance(generated_data, list) else []
-            
+            if isinstance(generated_data, list) and len(generated_data) > 0:
+                return generated_data
+                
     except Exception as e:
         print(f"CognitiveAIGenerator - Error calling Ollama: {e}")
-        # Fallback to static dummy for demo if LLM is offline
-        return [
-            {
-                "question": f"Synthesized question about {topic} (Demo Fallback)",
-                "options": ["A", "B", "C", "D"],
-                "answer": "A",
-                "explanation": "Generator fallback activated due to connection issues.",
-                "bloom_level": "remember"
-            }
-        ]
-    
-    return []
+        
+    # Fallback to static dummy for demo if LLM is offline or fails to generate valid json
+    print(f"CognitiveAIGenerator - Utilizing fallback (status {response.status_code if 'response' in locals() else 'error'})")
+    return [
+        {
+            "question": f"Synthesized question about {topic} (Demo Fallback)",
+            "options": ["A", "B", "C", "D"],
+            "answer": "A",
+            "explanation": "Generator fallback activated due to connection issues or model unavailability.",
+            "bloom_level": "remember"
+        }
+    ]

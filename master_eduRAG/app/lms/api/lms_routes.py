@@ -4,7 +4,7 @@ import os
 from uuid import UUID, uuid4
 from typing import List, Optional
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import select, func
 from pydantic import BaseModel
@@ -26,25 +26,12 @@ router = APIRouter(prefix="/lms", tags=["LMS Core"])
 
 # --- Core Content management ---
 
-@router.get("/classrooms", tags=["Content Matrix"])
-async def get_all_classrooms(db: Session = Depends(get_db)):
+@router.get("/classrooms/explore", tags=["Content Matrix"])
+async def get_explore_classrooms(db: Session = Depends(get_db)):
     """List all available classrooms/cohorts."""
     classrooms = db.query(Classroom).all()
     return [{"id": c.id, "name": c.name, "subject": c.subject, "code": c.code} for c in classrooms]
 
-@router.post("/courses", tags=["Studio"])
-async def create_new_course(data: dict, db: Session = Depends(get_db), user: User = Depends(require_role(["teacher", "admin"]))):
-    """Architect a new educational path."""
-    new_course = Course(
-        instructor_id=user.id,
-        title=data.get("title", "Untitled Course"),
-        description=data.get("description", ""),
-        subject=data.get("subject", "General")
-    )
-    db.add(new_course)
-    db.commit()
-    db.refresh(new_course)
-    return {"success": True, "course_id": new_course.id}
 
 @router.get("/courses/{course_id}/architecture", tags=["Studio"])
 async def get_course_architecture(course_id: int, db: Session = Depends(get_db)):
@@ -386,35 +373,6 @@ async def list_materials(
     materials = db.query(LMSMaterial).filter(LMSMaterial.classroom_id == classroom_id).all()
     return materials
 
-@router.get("/members")
-async def list_global_members(
-    db: Session = Depends(get_db),
-    user: User = Depends(require_role(["teacher", "admin"]))
-):
-    """List all users in the system (for Members dashboard)."""
-    users = db.query(User).all()
-    # Mask password_hash
-    return [{"id": u.id, "name": u.name, "email": u.email, "role": u.role, "status": u.status} for u in users]
-
-@router.get("/chats/global")
-async def list_global_chats(
-    db: Session = Depends(get_db),
-    user: User = Depends(require_role(["teacher", "admin"]))
-):
-    """List all global chat rooms and their summary."""
-    # For now, just return classroom chat rooms user is part of
-    rooms = db.query(ChatRoom).join(Classroom).join(ClassroomMember).filter(ClassroomMember.user_id == user.id).all()
-    results = []
-    for r in rooms:
-        member_count = db.query(ClassroomMember).filter(ClassroomMember.classroom_id == r.classroom_id).count()
-        results.append({
-            "id": r.id, 
-            "name": r.name, 
-            "members": member_count,
-            "lastMessage": "Welcome to the discussion", 
-            "time": "Today"
-        })
-    return results
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -444,6 +402,13 @@ async def create_new_course(
     db.commit()
     db.refresh(course)
     return {"success": True, "course_id": course.id}
+
+@router.get("/courses", tags=["Teacher Studio"])
+async def list_courses(db: Session = Depends(get_db)):
+    """List all high-level courses/learning paths."""
+    courses = db.query(Course).all()
+    return [{"id": c.id, "name": c.title, "subject": c.subject, "description": c.description} for c in courses]
+
 
 class SectionCreate(BaseModel):
     title: str
@@ -741,52 +706,69 @@ class UniversalExamCreate(BaseModel):
     difficulty: str = "medium"
     context_type: str = "general" # 'general', 'document', 'mastery'
 
+def background_generate_exam(exam_id: int, topic: str, context_type: str, num_questions: int, difficulty: str):
+    from app.database import SessionLocal
+    db = SessionLocal()
+    try:
+        from app.lms.core.ai_generator import CognitiveAIGenerator
+        from app.models import QuestionBank, Assessment
+        questions = CognitiveAIGenerator(
+            topic=topic,
+            context_type=context_type,
+            num_items=num_questions,
+            difficulty=difficulty,
+            db=db
+        )
+        q_ids = []
+        for q in questions:
+            qb = QuestionBank(
+                subject=topic,
+                topic=topic,
+                question_type="mcq",
+                difficulty=2,
+                content=q
+            )
+            db.add(qb)
+            db.flush()
+            q_ids.append(qb.id)
+            
+        exam = db.query(Assessment).get(exam_id)
+        if exam:
+            exam.question_ids = q_ids
+            exam.is_published = True
+            db.commit()
+    except Exception as e:
+        print(f"Background generation failed: {e}")
+        db.rollback()
+    finally:
+        db.close()
+
+
 @router.post("/exams/generate", tags=["Exam Architect"])
 async def generate_universal_exam(
     data: UniversalExamCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
     """Universal generation endpoint for Exams and Quizzes using CognitiveAIGenerator."""
-    # 1. GENERATE
-    questions = CognitiveAIGenerator(
-        topic=data.topic,
-        context_type=data.context_type,
-        num_items=data.num_questions,
-        difficulty=data.difficulty,
-        db=db
-    )
-    
-    # 2. PERSIST TO DB
-    # Create the Assessment
     new_exam = Assessment(
         course_id=data.course_id,
         classroom_id=data.classroom_id,
         title=data.title,
-        is_published=True,
+        is_published=False,
         question_ids=[]
     )
     db.add(new_exam)
-    db.flush() # Get ID
-    
-    q_ids = []
-    # Create Question Bank entries and link to Assessment
-    for q in questions:
-        qb = QuestionBank(
-            subject=data.topic,
-            topic=data.topic,
-            question_type="mcq",
-            difficulty=2,
-            content=q # The dict from generator matches QuestionBank's JSON expectations
-        )
-        db.add(qb)
-        db.flush()
-        q_ids.append(qb.id)
-    
-    # Update Assessment with linked question IDs
-    new_exam.question_ids = q_ids
     db.commit()
-    return {"success": True, "assessment_id": new_exam.id, "questions_count": len(q_ids)}
+    db.refresh(new_exam)
+    
+    background_tasks.add_task(
+        background_generate_exam, 
+        new_exam.id, data.topic, data.context_type, data.num_questions, data.difficulty
+    )
+    
+    return {"success": True, "assessment_id": new_exam.id, "status": "processing"}
 
 
 class AssessmentSubmission(BaseModel):
@@ -837,6 +819,7 @@ async def submit_assessment(
     return {"success": True, "score": score, "attempt_id": attempt.id}
 
 
+
 @router.get("/classrooms/{classroom_id}/exams", tags=["Exam Architect"])
 async def list_classroom_exams(classroom_id: str, db: Session = Depends(get_db)):
     """List all exams/assessments for a classroom."""
@@ -848,14 +831,44 @@ async def list_classroom_exams(classroom_id: str, db: Session = Depends(get_db))
             "description": e.description,
             "points": e.total_points,
             "is_published": e.is_published,
-            "created_at": e.created_at.isoformat()
+            "created_at": getattr(e.created_at, 'isoformat', lambda: str(e.created_at))()
         }
         for e in exams
     ]
 
+@router.get("/assessments/{assessment_id}", tags=["Assessment"])
+async def get_assessment_details(assessment_id: int, db: Session = Depends(get_db)):
+    """Retrieve full details for an assessment including all question content."""
+    assessment = db.query(Assessment).filter(Assessment.id == assessment_id).first()
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    
+    questions = []
+    if assessment.question_ids:
+        q_records = db.query(QuestionBank).filter(QuestionBank.id.in_(assessment.question_ids)).all()
+        q_map = {q.id: q for q in q_records}
+        for q_id in assessment.question_ids:
+            if q_id in q_map:
+                q = q_map[q_id]
+                questions.append({
+                    "id": q.id,
+                    "type": q.question_type,
+                    "difficulty": q.difficulty,
+                    "content": q.content
+                })
+    
+    return {
+        "id": assessment.id,
+        "title": assessment.title,
+        "description": assessment.description,
+        "total_points": assessment.total_points,
+        "time_limit": assessment.time_limit,
+        "questions": questions
+    }
+
 
 @router.get("/members", tags=["Organization"])
-async def get_all_members(db: Session = Depends(get_db), user: User = Depends(get_current_user_optional)):
+async def get_all_members(db: Session = Depends(get_db), user: User = Depends(require_role(["teacher", "admin"]))):
     """Fetch all users in the tenant for the management view."""
     users = db.query(User).all()
     return [
@@ -879,7 +892,7 @@ async def get_all_assignments(db: Session = Depends(get_db), user: User = Depend
             "title": a.title,
             "class": a.course.name if a.course else "General Academy",
             "due": "In 3 Days", 
-            "status": "active" if a.is_published else "draft",
+            "status": "active" if a.is_published else "generating",
             "completions": f"{db.query(AssessmentAttempt).filter(AssessmentAttempt.assessment_id == a.id).count()} Active"
         }
         for a in db.query(Assessment).all()
@@ -993,9 +1006,9 @@ async def get_recommended_learning_paths(
     }
 
 @router.get("/chats/global", tags=["Communication Matrix"])
-async def get_global_chats(db: Session = Depends(get_db)):
-    """Retrieve all active classroom chat rooms for the Global Discussion view."""
-    rooms = db.query(ChatRoom).all()
+async def get_global_chats(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Retrieve all active classroom chat rooms user is part of."""
+    rooms = db.query(ChatRoom).join(Classroom).join(ClassroomMember).filter(ClassroomMember.user_id == user.id).all()
     results = []
     for r in rooms:
         # Get last message

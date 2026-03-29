@@ -6,6 +6,7 @@ import {
   Upload, Send, Hash, Settings, Users, 
   Sparkles, Plus, Clock, FileText, ChevronRight 
 } from 'lucide-react'
+import AssessmentView from './AssessmentView'
 
 export default function ClassroomDetail({ classroomId, user, onBack, onOpenArtifact }) {
   const [activeTab, setActiveTab] = useState('materials') // 'materials', 'chat', 'exams', 'approvals'
@@ -21,6 +22,7 @@ export default function ClassroomDetail({ classroomId, user, onBack, onOpenArtif
   const [uploading, setUploading] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [showGenModal, setShowGenModal] = useState(false)
+  const [selectedAssessmentId, setSelectedAssessmentId] = useState(null)
   const fileInputRef = useRef(null)
 
   useEffect(() => {
@@ -151,6 +153,10 @@ export default function ClassroomDetail({ classroomId, user, onBack, onOpenArtif
     try { ws.current.send(JSON.stringify(payload)); } catch (err) {}
   }
 
+  if (selectedAssessmentId) {
+    return <AssessmentView assessmentId={selectedAssessmentId} userId={user.id} onBack={() => setSelectedAssessmentId(null)} />
+  }
+
   if (loading || !classroom) {
     return <div className="h-full flex items-center justify-center"><div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>
   }
@@ -275,7 +281,12 @@ export default function ClassroomDetail({ classroomId, user, onBack, onOpenArtif
                             <span className="w-1 h-1 rounded-full bg-white/20" />
                             <span className={exam.is_published ? 'text-green-400' : 'text-orange-400'}>{exam.is_published ? 'Active' : 'Draft'}</span>
                         </div>
-                        <button className="w-full bg-white/5 hover:bg-white text-white/40 hover:text-black py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all">Launch Preview</button>
+                        <button 
+                            onClick={() => setSelectedAssessmentId(exam.id)}
+                            className="w-full bg-white/5 hover:bg-white text-white/40 hover:text-black py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
+                        >
+                            {user?.role === 'teacher' ? 'Launch Preview' : 'Start Assessment'}
+                        </button>
                     </div>
                 ))}
                 {exams.length === 0 && (

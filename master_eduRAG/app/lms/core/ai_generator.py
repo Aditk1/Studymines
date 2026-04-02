@@ -5,6 +5,10 @@ from typing import List, Dict, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
 from app.models import Upload, QuestionBank, GraphEntity
+from app.llm.utils import clean_json_response
+from app.utils import get_logger
+
+logger = get_logger(__name__)
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 MODEL_NAME = "llama3"
@@ -78,20 +82,16 @@ def CognitiveAIGenerator(
         
         if response.status_code == 200:
             result = response.json().get('response', '')
-            # Clean response for JSON parsing
-            cleaned_result = result.strip()
-            if cleaned_result.startswith('```json'):
-                cleaned_result = cleaned_result.replace('```json', '').replace('```', '')
-            
-            generated_data = json.loads(cleaned_result)
+            # Clean and parse response
+            generated_data = clean_json_response(result)
             if isinstance(generated_data, list) and len(generated_data) > 0:
                 return generated_data
                 
     except Exception as e:
-        print(f"CognitiveAIGenerator - Error calling Ollama: {e}")
+        logger.error(f"Error calling Ollama: {e}")
         
     # Fallback to static dummy for demo if LLM is offline or fails to generate valid json
-    print(f"CognitiveAIGenerator - Utilizing fallback (status {response.status_code if 'response' in locals() else 'error'})")
+    logger.warning(f"Utilizing fallback (status {response.status_code if 'response' in locals() else 'error'})")
     return [
         {
             "question": f"Synthesized question about {topic} (Demo Fallback)",

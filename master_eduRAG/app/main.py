@@ -23,7 +23,7 @@ from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-import os, tempfile, json, uuid, shutil, cv2
+import os, tempfile, json, uuid, shutil
 from typing import Optional
 
 from app.database import init_db, get_db
@@ -113,6 +113,19 @@ async def signup(
     role: str = Form("student"),  # Accept role choice from frontend
     db: Session = Depends(get_db),
 ):
+    """
+    Register a new user account.
+    
+    Args:
+        name: User's full name
+        email: Unique email address
+        password: User password (stored as plaintext - consider hashing)
+        student_level: Academic level (elementary, high_school, undergraduate, postgraduate)
+        role: User role (student, teacher, admin)
+        
+    Returns:
+        Success response with access token and user details, or 400 if email already registered
+    """
     existing = db.query(User).filter(User.email == email).first()
     if existing:
         return JSONResponse(status_code=400, content={"error": "Email already registered"})
@@ -132,6 +145,16 @@ async def signup(
 
 @app.post("/api/v1/auth/login")
 async def login(email: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
+    """
+    Authenticate user and issue access token.
+    
+    Args:
+        email: User email address
+        password: User password
+        
+    Returns:
+        Success response with access token and user details, or 401 if invalid credentials
+    """
     user = db.query(User).filter(User.email == email).first()
     if not user or user.password_hash != password:
         return JSONResponse(status_code=401, content={"error": "Invalid email or password"})
@@ -218,19 +241,33 @@ async def upload_document(
     student_level: str = Form("undergraduate"),
     db: Session = Depends(get_db),
 ):
-    print(f"DEBUG_UPLOAD_DOC: Received doc='{file.filename}' for user='{user_id}'")
+    """
+    Upload and process a document (PDF, DOCX, PPTX, TXT).
+    
+    The document is parsed, preprocessed, split into chunks, and processed through:
+    1. Content segregation (subject/topic classification)
+    2. Study package generation (concepts, flashcards, questions)
+    3. Knowledge graph construction via RLM-GraphRAG
+    
+    Args:
+        file: Document file to upload
+        user_id: ID of user uploading the document
+        subject: Optional subject classification
+        topic: Optional topic classification
+        student_level: Academic level for content generation (default: undergraduate)
+        
+    Returns:
+        Upload record with study_package, graph metadata, and processing statistics
+    """
     try:
         user = _resolve_user(user_id, db, student_level)
-        print(f"DEBUG_UPLOAD_DOC: User resolved: {user.id if user else 'NONE'}")
         
         content = await file.read()
         if len(content) > MAX_FILE_SIZE:
-             print(f"DEBUG_UPLOAD_DOC: File too large")
              raise HTTPException(status_code=413, detail="File too large")
 
         file_ext = (file.filename or "").rsplit(".", 1)[-1].lower()
         if file_ext not in ALLOWED_DOCUMENT_TYPES:
-            print(f"DEBUG_UPLOAD_DOC: Unsupported extension '{file_ext}'")
             raise HTTPException(status_code=400, detail=f"Unsupported type: {file_ext}")
 
         # Generate permanent storage path
@@ -239,19 +276,15 @@ async def upload_document(
         unique_filename = f"{uuid.uuid4()}_{file.filename}"
         permanent_path = os.path.join(save_dir, unique_filename)
 
-        print(f"DEBUG_UPLOAD_DOC: Saving to {permanent_path}")
         with open(permanent_path, "wb") as f:
             f.write(content)
 
         try:
-            print(f"DEBUG_UPLOAD_DOC: Parsing document...")
             parsed = parse_document(permanent_path)
             
-            print(f"DEBUG_UPLOAD_DOC: Preprocessing and Segregating...")
             text = preprocess_text(parsed["text"])
             segregation = segregate_content(text, subject, topic, file.filename)
 
-            print(f"DEBUG_UPLOAD_DOC: Generating study package...")
             raw_res = await chunk_and_process(
                 text, student_level,
                 segregation.get("subject"), segregation.get("topic"),
@@ -261,7 +294,6 @@ async def upload_document(
             graph_stats = raw_res["stats"]
 
             # Persist
-            print(f"DEBUG_UPLOAD_DOC: Saving record to DB...")
             graph_meta = study_package.get("graph_metadata", {})
             upload_rec = Upload(
                 user_id=user.id, file_name=file.filename,
@@ -322,19 +354,31 @@ async def upload_image(
     student_level: str = Form("undergraduate"),
     db: Session = Depends(get_db),
 ):
-    print(f"DEBUG_UPLOAD_IMAGE: Received image upload for user_id='{user_id}'")
+    """
+    Upload and process an image (JPG, PNG, etc.).
+    
+    The image is preprocessed using computer vision, text is extracted via OCR,
+    and the extracted content is processed through the study package and graph generation pipeline.
+    
+    Args:
+        file: Image file to upload
+        user_id: ID of user uploading the image
+        subject: Optional subject classification
+        topic: Optional topic classification
+        student_level: Academic level for content generation (default: undergraduate)
+        
+    Returns:
+        Upload record with extracted text, study_package, and graph metadata
+    """
     try:
         user = _resolve_user(user_id, db, student_level)
-        print(f"DEBUG_UPLOAD_IMAGE: User resolved: id={user.id if user else 'NONE'}")
         
         content = await file.read()
         if len(content) > MAX_IMAGE_SIZE:
-            print(f"DEBUG_UPLOAD_IMAGE: Image too large ({len(content)} bytes)")
             raise HTTPException(status_code=413, detail="Image too large")
 
         file_ext = (file.filename or "").rsplit(".", 1)[-1].lower()
         if file_ext not in ALLOWED_IMAGE_TYPES:
-            print(f"DEBUG_UPLOAD_IMAGE: Unsupported type '{file_ext}'")
             raise HTTPException(status_code=400, detail=f"Unsupported image type: {file_ext}")
 
         # Generate permanent storage path - Force .jpg for better compatibility
@@ -343,18 +387,14 @@ async def upload_image(
         unique_filename = f"{uuid.uuid4()}.jpg"
         permanent_path = os.path.join(save_dir, unique_filename)
 
-        print(f"DEBUG_UPLOAD_IMAGE: Saving image to {permanent_path}")
         with open(permanent_path, "wb") as f:
             f.write(content)
 
         try:
-            print(f"DEBUG_UPLOAD_IMAGE: Preprocessing...")
             preprocessed = ImagePreprocessor.preprocess(permanent_path)
             cv2.imwrite(permanent_path, preprocessed)
             
-            print(f"DEBUG_UPLOAD_IMAGE: Extracting from image...")
             extraction = extract_from_image(permanent_path)
-            print(f"DEBUG_UPLOAD_IMAGE: Extraction complete. Text length: {len(extraction.get('extracted_text', ''))}")
 
             if not extraction.get("extracted_text"):
                 print(f"DEBUG_UPLOAD_IMAGE: Error extraction text is empty.")
@@ -435,7 +475,23 @@ async def graph_query(
     upload_id: Optional[int] = Form(None),
     db: Session = Depends(get_db),
 ):
-    """Multi-hop question answering over the Knowledge Graph."""
+    """
+    Multi-hop question answering over the Knowledge Graph.
+    
+    Performs semantic reasoning using the RLM-GraphRAG engine to answer questions
+    by traversing the knowledge graph constructed from uploaded documents. Uses:
+    - Seed entity linking (C1)
+    - Graph traversal with RLM-REPL (C3)
+    - Multi-entity parallel dispatch (C4)
+    - Context assembly and answer generation
+    
+    Args:
+        question: Natural language question to answer
+        upload_id: Optional upload ID to constrain query to specific document's graph
+        
+    Returns:
+        Answer with supporting context, confidence scores, and traversal metadata
+    """
     from app.bridge import RAGBridge
 
     graph_path = None
@@ -455,7 +511,19 @@ async def graph_chat(
     upload_id: Optional[int] = Form(None),
     db: Session = Depends(get_db),
 ):
-    """Alias for graph_query specifically intended for Chatbot integration."""
+    """
+    Graph-grounded chatbot interface.
+    
+    Alias for graph_query optimized for conversational interactions. Allows students
+    to ask follow-up questions about document content with graph-based reasoning.
+    
+    Args:
+        message: User message / question
+        upload_id: Optional upload ID for context
+        
+    Returns:
+        Chatbot response with graph-grounded context
+    """
     return await graph_query(question=message, upload_id=upload_id, db=db)
 
 

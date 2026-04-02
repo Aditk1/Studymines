@@ -4,6 +4,7 @@ from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Text, Uniq
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.database import Base
+from app.models import Assessment
 
 class Classroom(Base):
     __tablename__ = "lms_classrooms"
@@ -22,14 +23,12 @@ class Classroom(Base):
     is_archived = Column(Boolean, default=False)
     settings = Column(JSON, default=dict)
     
-    from sqlalchemy.dialects.postgresql import UUID
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     members = relationship("ClassroomMember", back_populates="classroom", cascade="all, delete-orphan")
     materials = relationship("LMSMaterial", back_populates="classroom", cascade="all, delete-orphan")
-    from app.models import Assessment # Local import to avoid circularity if any
     assessments = relationship("Assessment", back_populates="classroom", cascade="all, delete-orphan")
 
 class ClassroomMember(Base):

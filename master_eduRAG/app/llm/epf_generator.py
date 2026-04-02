@@ -5,9 +5,11 @@ Uses Gemini to generate leveled summaries, concepts, flashcards, and questions.
 
 import json
 from typing import Dict, List, Optional
-import google.generativeai as genai
-from app.config import DEFAULT_MODEL
+from app.clients import configure_gemini, get_model
 from app.llm.utils import clean_json_response, retry_with_backoff
+from app.utils import get_logger
+
+logger = get_logger(__name__)
 
 
 class EPFGenerator:
@@ -21,8 +23,8 @@ class EPFGenerator:
             api_key: Gemini API key (or use GOOGLE_API_KEY env var).
         """
         if api_key:
-            genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(DEFAULT_MODEL)
+            configure_gemini(api_key)
+        self.model = get_model()
 
     @retry_with_backoff(retries=5)
     def _call_gemini(self, prompt: str):
@@ -35,7 +37,7 @@ class EPFGenerator:
             response = self._call_gemini(prompt)
             return response.text
         except Exception as e:
-            print(f"⚠ Gemini failed after retries: {e}. Falling back to Ollama...")
+            logger.warning(f"Gemini failed after retries: {e}. Falling back to Ollama...")
             return self._call_ollama_fallback(prompt)
 
     def _call_ollama_fallback(self, prompt: str) -> str:
@@ -47,11 +49,19 @@ class EPFGenerator:
         
         try:
             # Attempt to get the model from config, default to llama3.2:3b
-            from src.utils.config import load_config
-            from pathlib import Path
-            config_path = Path(__file__).parent.parent.parent / "config" / "base.yaml"
-            config = load_config(str(config_path))
-            model = config.llm.model
+            from app.utils import load_config
+            config_path = None
+            try:
+                from app.utils import get_config_path
+                config_path = get_config_path("base.yaml")
+            except Exception:
+                pass
+            
+            if config_path:
+                config = load_config(str(config_path))
+                model = config.llm.model
+            else:
+                model = "llama3.2:3b"
         except Exception:
             model = "llama3.2:3b"
 
@@ -61,13 +71,13 @@ class EPFGenerator:
             "stream": False
         }
         
-        print(f"🔄 Using Ollama fallback with model: {model}")
+        logger.info(f"Using Ollama fallback with model: {model}")
         try:
             resp = requests.post(url, json=payload, timeout=120)
             resp.raise_for_status()
             return resp.json().get("response", "")
         except Exception as fallback_err:
-            print(f"❌ Ollama fallback failed: {fallback_err}")
+            logger.error(f"Ollama fallback failed: {fallback_err}")
             raise fallback_err
 
     def generate_outputs(

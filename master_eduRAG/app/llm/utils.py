@@ -26,7 +26,6 @@ def clean_json_response(text: str) -> Dict[str, Any]:
         return json.loads(text.strip())
     except Exception as e:
         print(f"Failed to parse JSON: {e}")
-        # print(f"Original text: {text}") # Hidden for brevity
         raise ValueError(f"Invalid JSON response from model: {str(e)}")
 
 def retry_with_backoff(retries: int = 5, backoff_in_seconds: int = 2):

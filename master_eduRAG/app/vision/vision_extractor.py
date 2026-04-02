@@ -5,11 +5,14 @@ Implements SAEOCR (Semantically Aware Educational OCR) for image content extract
 
 import base64
 from typing import Dict, Optional
-import google.generativeai as genai
 import cv2
 import json
 from app.config import VISION_MODEL
+from app.clients import configure_gemini, get_vision_model
 from app.llm.utils import clean_json_response, retry_with_backoff
+from app.utils import get_logger
+
+logger = get_logger(__name__)
 
 
 class VisionExtractor:
@@ -23,10 +26,8 @@ class VisionExtractor:
             api_key: Gemini API key (or use GOOGLE_API_KEY env var).
         """
         if api_key:
-            genai.configure(api_key=api_key)
-        model_name = VISION_MODEL if VISION_MODEL.startswith("models/") else f"models/{VISION_MODEL}"
-        print(f"DEBUG_VISION: Initializing model {model_name}")
-        self.model = genai.GenerativeModel(model_name)
+            configure_gemini(api_key)
+        self.model = get_vision_model()
 
     @retry_with_backoff(retries=5)
     def _generate_content(self, contents):
@@ -68,7 +69,7 @@ Respond in JSON format:
 }
 """
             
-            print(f"DEBUG_VISION: Sending request to Gemini Vision (data length: {len(image_data)})")
+            logger.debug(f"Sending request to Gemini Vision (data length: {len(image_data)})")
             response = self._generate_content([
                 {
                     "mime_type": "image/jpeg",
@@ -76,7 +77,7 @@ Respond in JSON format:
                 },
                 prompt
             ])
-            print(f"DEBUG_VISION: Response received from Gemini.")
+            logger.debug(f"Response received from Gemini.")
             
             # Parse response
             result = clean_json_response(response.text)
@@ -139,11 +140,10 @@ Respond in JSON format:
 }
 """
             
-            image_data_b64 = self._read_image_as_base64(image_path)
             response = self._generate_content([
                 {
                     "mime_type": "image/jpeg",
-                    "data": image_data_b64
+                    "data": image_data
                 },
                 prompt
             ])

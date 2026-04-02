@@ -5,15 +5,17 @@ Auto-classifies content via Gemini or accepts manual labels.
 
 import json
 from typing import Dict, Optional
-import google.generativeai as genai
+from app.clients import get_model
+from app.llm.utils import clean_json_response
 
 
 class ContentSegregator:
     def __init__(self, api_key: Optional[str] = None):
+        # api_key is now handled centrally via environment or GeminiClient
         if api_key:
-            genai.configure(api_key=api_key)
-        from app.config import DEFAULT_MODEL
-        self.model = genai.GenerativeModel(DEFAULT_MODEL)
+            from app.clients import configure_gemini
+            configure_gemini(api_key)
+        self.model = get_model()
 
     def manual_segregate(self, subject: str, topic: str) -> Dict[str, str]:
         return {"subject": subject.strip(), "topic": topic.strip(), "method": "manual"}
@@ -37,7 +39,7 @@ Respond ONLY with valid JSON:
 
         try:
             response = self.model.generate_content(prompt)
-            result = json.loads(response.text)
+            result = clean_json_response(response.text)
             result["method"] = "auto"
             return result
         except Exception as e:

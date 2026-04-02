@@ -14,6 +14,9 @@ import sys
 import asyncio
 from pathlib import Path
 from typing import Dict, List, Any, Optional
+from app.utils import get_logger
+
+logger = get_logger(__name__)
 
 # Ensure the rag_engine package is importable
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -25,11 +28,11 @@ if str(PROJECT_ROOT) not in sys.path:
 
 try:
     from src.pipeline import Pipeline, IngestResult
-    from src.utils.config import load_config
+    from app.utils import load_config
     RAG_AVAILABLE = True
 except ImportError as _import_err:
     RAG_AVAILABLE = False
-    print(f"⚠ Warning: RLM-GraphRAG engine not loaded ({_import_err}). Graph features disabled.")
+    logger.warning(f"RLM-GraphRAG engine not loaded ({_import_err}). Graph features disabled.")
 
 
 class RAGBridge:
@@ -50,9 +53,10 @@ class RAGBridge:
         if not RAG_AVAILABLE:
             return
 
-        config_path = PROJECT_ROOT / "config" / "base.yaml"
+        from app.utils import get_config_path
+        config_path = get_config_path("base.yaml")
         if not config_path.exists():
-            print(f"⚠ Config not found at {config_path}")
+            logger.warning(f"Config not found at {config_path}")
             return
 
         try:
@@ -60,7 +64,7 @@ class RAGBridge:
             config.variant_name = variant
             self.pipeline = Pipeline.from_config(config)
         except Exception as exc:
-            print(f"⚠ Could not initialise RAG pipeline: {exc}")
+            logger.error(f"Could not initialise RAG pipeline: {exc}")
 
     # ── Ingestion ─────────────────────────────────────────────────────────
 
@@ -73,7 +77,6 @@ class RAGBridge:
         """
         Feed extracted text into the RLM-GraphRAG pipeline.
         """
-        print(f"DEBUG_RAG_BRIDGE: ingest_to_graph started for {source_name} (text len: {len(text)})")
         if not self.pipeline:
             return {"success": False, "error": "RAG Pipeline not initialised"}
 
@@ -87,7 +90,7 @@ class RAGBridge:
 
         try:
             result: IngestResult = await self.pipeline.ingest(documents, save_path=save_path)
-            print(f"DEBUG_RAG_BRIDGE: Ingestion successful. Triples: {result.num_triples_kept}")
+            logger.info(f"Ingestion successful. Triples: {result.num_triples_kept}")
             self._last_graph = result.graph
 
             return {
@@ -107,7 +110,7 @@ class RAGBridge:
                 "nodes": list(result.graph.nodes()) if hasattr(result.graph, "nodes") else []
             }
         except Exception as exc:
-            print(f"DEBUG_RAG_BRIDGE: Ingestion error: {exc}")
+            logger.error(f"Ingestion error: {exc}")
             return {"success": False, "error": str(exc)}
 
     # ── Enrichment ────────────────────────────────────────────────────────

@@ -532,7 +532,7 @@ async def get_mastery_graph_data(
         target_id = None 
     
     # Get latest mastery for each entity
-    from app.models import GraphEntity, Upload
+    from app.models import GraphEntity, Upload, MasteryLog
     
     query = db.query(GraphEntity)
     if upload_id:
@@ -708,10 +708,12 @@ class UniversalExamCreate(BaseModel):
 
 def background_generate_exam(exam_id: int, topic: str, context_type: str, num_questions: int, difficulty: str):
     from app.database import SessionLocal
+    import traceback
     db = SessionLocal()
     try:
         from app.lms.core.ai_generator import CognitiveAIGenerator
         from app.models import QuestionBank, Assessment
+        print(f"[ExamGen] Starting generation for exam_id={exam_id}, topic={topic}, num={num_questions}")
         questions = CognitiveAIGenerator(
             topic=topic,
             context_type=context_type,
@@ -719,6 +721,7 @@ def background_generate_exam(exam_id: int, topic: str, context_type: str, num_qu
             difficulty=difficulty,
             db=db
         )
+        print(f"[ExamGen] Generated {len(questions)} questions")
         q_ids = []
         for q in questions:
             qb = QuestionBank(
@@ -732,13 +735,17 @@ def background_generate_exam(exam_id: int, topic: str, context_type: str, num_qu
             db.flush()
             q_ids.append(qb.id)
             
-        exam = db.query(Assessment).get(exam_id)
+        exam = db.query(Assessment).filter(Assessment.id == exam_id).first()
         if exam:
             exam.question_ids = q_ids
             exam.is_published = True
             db.commit()
+            print(f"[ExamGen] Successfully published exam_id={exam_id} with {len(q_ids)} questions")
+        else:
+            print(f"[ExamGen] ERROR: Assessment id={exam_id} not found in DB")
     except Exception as e:
-        print(f"Background generation failed: {e}")
+        print(f"[ExamGen] Background generation failed: {e}")
+        traceback.print_exc()
         db.rollback()
     finally:
         db.close()
@@ -752,9 +759,13 @@ async def generate_universal_exam(
     user: User = Depends(get_current_user)
 ):
     """Universal generation endpoint for Exams and Quizzes using CognitiveAIGenerator."""
+    # Normalize empty strings to None for FK safety
+    classroom_id = data.classroom_id if data.classroom_id else None
+    course_id = data.course_id if data.course_id else None
+    
     new_exam = Assessment(
-        course_id=data.course_id,
-        classroom_id=data.classroom_id,
+        course_id=course_id,
+        classroom_id=classroom_id,
         title=data.title,
         is_published=False,
         question_ids=[]
@@ -813,8 +824,9 @@ async def submit_assessment(
     
     # If the assessment has explicit question links to entities, use those
     # For now, if tied to a course, we'll iterate course entities or just global update
-    engine = RiskEngine(db)
-    await engine.analyze_student(user.id, assessment.course_id or 0)
+    if assessment.course_id:
+        engine = RiskEngine(db)
+        await engine.analyze_student(user.id, assessment.course_id)
     
     return {"success": True, "score": score, "attempt_id": attempt.id}
 
@@ -881,6 +893,62 @@ async def get_all_members(db: Session = Depends(get_db), user: User = Depends(re
         }
         for u in users
     ]
+
+@router.post("/members/{user_id}/status", tags=["Organization"])
+async def update_member_status(
+    user_id: str,
+    status: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(["admin", "teacher"]))
+):
+    """Change user status (active/banned/etc)."""
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    target.status = status
+    db.commit()
+    return {"success": True}
+
+@router.post("/members/{user_id}/role", tags=["Organization"])
+async def update_member_role(
+    user_id: str,
+    role: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(["admin", "teacher"]))
+):
+    """Update a user's role (student/teacher/admin)."""
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    target.role = role
+    db.commit()
+    return {"success": True}
+
+@router.delete("/members/{user_id}", tags=["Organization"])
+async def delete_member(
+    user_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(["admin", "teacher"]))
+):
+    """
+    Permanently delete a user (caution).
+    - Admins can delete anyone.
+    - Teachers can only delete students.
+    """
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    # Security Check: Teachers cannot delete other teachers or admins
+    if user.role == "teacher" and target.role != "student":
+        raise HTTPException(
+            status_code=403, 
+            detail="Teachers can only manage and unenroll student-level accounts."
+        )
+        
+    db.delete(target)
+    db.commit()
+    return {"success": True}
 
 @router.get("/assignments", tags=["Assignments"])
 async def get_all_assignments(db: Session = Depends(get_db), user: User = Depends(get_current_user_optional)):
@@ -1024,3 +1092,122 @@ async def get_global_chats(db: Session = Depends(get_db), user: User = Depends(g
             "time": last_msg.created_at.strftime("%I:%M %p") if last_msg else "Quiet"
         })
     return results
+# ═══════════════════════════════════════════════════════════════
+# INSTRUCTOR STUDIO (AI ARCHITECTURE)
+# ═══════════════════════════════════════════════════════════════
+@router.get("/courses", tags=["Studio"])
+async def get_courses(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """List all courses. Teachers see their own, students see published ones."""
+    if user.role in ["teacher", "admin"]:
+        courses = db.query(Course).filter(Course.instructor_id == user.id).all()
+    else:
+        courses = db.query(Course).filter(Course.status == "published").all()
+    return [{"id": c.id, "title": c.title, "description": c.description, "status": c.status} for c in courses]
+
+@router.post("/courses", tags=["Studio"])
+async def create_course(data: dict, db: Session = Depends(get_db), user: User = Depends(require_role(["teacher", "admin"]))):
+    """Create a new course shell."""
+    course = Course(
+        title=data.get("title", "Untitled Course"),
+        description=data.get("description", ""),
+        instructor_id=user.id,
+        status="draft"
+    )
+    db.add(course)
+    db.commit()
+    return {"course_id": course.id, "success": True}
+
+@router.post("/courses/{course_id}/sections", tags=["Studio"])
+async def add_course_section(course_id: int, data: dict, db: Session = Depends(get_db), user: User = Depends(require_role(["teacher", "admin"]))):
+    """Add a new section to a course."""
+    section = Section(
+        course_id=course_id,
+        title=data.get("title", "New Section"),
+        order=data.get("order", 0)
+    )
+    db.add(section)
+    db.commit()
+    return {"section_id": section.id, "success": True}
+
+@router.get("/courses/{course_id}/modules", tags=["Studio"])
+async def get_course_modules(course_id: int, db: Session = Depends(get_db)):
+    """Recall the full section/module tree for the editor."""
+    sections = db.query(Section).filter(Section.course_id == course_id).order_by(Section.order).all()
+    results = []
+    for s in sections:
+        modules = db.query(LessonModule).filter(LessonModule.section_id == s.id).order_by(LessonModule.order).all()
+        results.append({
+            "id": s.id,
+            "title": s.title,
+            "modules": [{"id": m.id, "title": m.title, "type": m.content_type} for m in modules]
+        })
+    return results
+
+@router.post("/studio/publish-architecture/{course_id}", tags=["Studio"])
+async def publish_course_architecture(
+    course_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(["teacher", "admin"]))
+):
+    """Marks a course architecture as published, making it visible to students."""
+    course = db.query(Course).filter(Course.id == course_id, Course.instructor_id == user.id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found or unauthorized")
+    
+    course.status = "published"
+    db.commit()
+    return {"success": True, "message": f"Course '{course.title}' published successfully."}
+
+class AIArchitectRequest(BaseModel):
+    artifact_id: int # Upload ID
+
+@router.post("/studio/ai-architect/{course_id}", tags=["Studio"])
+async def ai_architect_course(
+    course_id: int,
+    data: AIArchitectRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(["teacher", "admin"]))
+):
+    """
+    RAG-driven curriculum synthesis. 
+    Uses an artifact to automatically generate sections and modules.
+    """
+    from app.models import Upload
+    
+    course = db.query(Course).filter(Course.id == course_id, Course.instructor_id == user.id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+        
+    artifact = db.query(Upload).filter(Upload.id == data.artifact_id).first()
+    if not artifact:
+        raise HTTPException(status_code=404, detail="Artifact not found")
+        
+    # LOGIC: Mocking AI Deconstruction based on filename/subject
+    # In a real RAG flow, we would use CognitiveAIGenerator to parse the file 
+    # and extract "Table of Contents" or "Core Concepts".
+    
+    # 1. Create a "Foundation" Section
+    sec1 = Section(course_id=course.id, title=f"Foundations of {artifact.file_name.split('.')[0]}", order=0)
+    db.add(sec1)
+    db.flush()
+    
+    # Add Modules
+    m1 = LessonModule(section_id=sec1.id, title="Core Concept Overview", content_type="document", order=0)
+    m2 = LessonModule(section_id=sec1.id, title="Synthesized Summary", content_type="document", order=1)
+    db.add_all([m1, m2])
+    
+    # 2. Create an "Advanced Applications" Section
+    sec2 = Section(course_id=course.id, title="Advanced Synthesis & Applications", order=1)
+    db.add(sec2)
+    db.flush()
+    
+    m3 = LessonModule(section_id=sec2.id, title="AI-Generated Practice Quiz", content_type="quiz", order=0)
+    db.add(m3)
+    
+    db.commit()
+    return {
+        "success": True, 
+        "message": "AI Architecture complete.",
+        "sections_added": 2,
+        "modules_added": 3
+    }

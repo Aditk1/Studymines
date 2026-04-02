@@ -52,17 +52,19 @@ export default function Assignments({ user }) {
     const formData = new FormData(e.target)
     setGenerating(true)
     try {
+        const classroomId = formData.get('classroom_id')
         await axios.post('/api/v1/lms/exams/generate', {
             title: formData.get('title'),
             topic: formData.get('topic'),
             num_questions: parseInt(formData.get('num')),
-            classroom_id: formData.get('classroom_id') || null,
-            context_type: formData.get('context')
+            classroom_id: classroomId || null,
+            context_type: formData.get('context') || 'general'
         })
         setShowGenModal(false)
         fetchAssignments()
     } catch (err) {
         console.error("Exam generation failed", err)
+        alert("Exam generation request failed. Ensure the backend is running.")
     } finally {
         setGenerating(false)
     }
@@ -178,7 +180,7 @@ export default function Assignments({ user }) {
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-1">
                                 <label className="text-[10px] font-bold uppercase tracking-widest text-white/30 ml-2">Target Classroom</label>
-                                <select required name="classroom_id" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm focus:border-indigo-500/50 outline-none appearance-none cursor-pointer">
+                                <select name="classroom_id" className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 text-sm focus:border-indigo-500/50 outline-none appearance-none cursor-pointer">
                                     <option value="" className="bg-zinc-900">Select Classroom</option>
                                     {classrooms.map(c => (
                                         <option key={c.id} value={c.id} className="bg-zinc-900">{c.name}</option>

@@ -24,6 +24,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import os, tempfile, json, uuid, shutil
+import cv2
 from typing import Optional
 
 from app.database import init_db, get_db
@@ -239,6 +240,7 @@ async def upload_document(
     subject: Optional[str] = Form(None),
     topic: Optional[str] = Form(None),
     student_level: str = Form("undergraduate"),
+    analyze: bool = Form(False),
     db: Session = Depends(get_db),
 ):
     """
@@ -278,6 +280,19 @@ async def upload_document(
 
         with open(permanent_path, "wb") as f:
             f.write(content)
+
+        if not analyze:
+            upload_rec = Upload(
+                user_id=user.id, file_name=file.filename,
+                file_type=file_ext,
+                subject=subject or 'GeneralArchive', topic=topic or 'Untitled Document',
+                file_path=permanent_path,
+                study_package=None
+            )
+            db.add(upload_rec)
+            db.commit()
+            db.refresh(upload_rec)
+            return {"success": True, "upload_id": upload_rec.id, "file_name": file.filename, "message": "File arched. Pending analysis.", "is_analyzed": False}
 
         try:
             parsed = parse_document(permanent_path)
@@ -352,6 +367,7 @@ async def upload_image(
     subject: Optional[str] = Form(None),
     topic: Optional[str] = Form(None),
     student_level: str = Form("undergraduate"),
+    analyze: bool = Form(False),
     db: Session = Depends(get_db),
 ):
     """
@@ -389,6 +405,19 @@ async def upload_image(
 
         with open(permanent_path, "wb") as f:
             f.write(content)
+
+        if not analyze:
+            upload_rec = Upload(
+                user_id=user.id, file_name=file.filename,
+                file_type=file_ext,
+                subject=subject or 'GeneralArchive', topic=topic or 'Untitled Document',
+                file_path=permanent_path,
+                study_package=None
+            )
+            db.add(upload_rec)
+            db.commit()
+            db.refresh(upload_rec)
+            return {"success": True, "upload_id": upload_rec.id, "file_name": file.filename, "message": "File arched. Pending analysis.", "is_analyzed": False}
 
         try:
             preprocessed = ImagePreprocessor.preprocess(permanent_path)
@@ -448,26 +477,116 @@ async def upload_image(
                     "extraction_confidence": extraction.get("confidence"),
                     "segregation": segregation, "study_package": study_package}
             if legibility_warning:
-                resp["legibility_warning"] = legibility_warning
+                resp["warning"] = legibility_warning
+
             return resp
-        except Exception as e:
+
+        except Exception as inner_e:
             import traceback
             traceback.print_exc()
-            print(f"DEBUG_UPLOAD_IMAGE inner Exception: {e}")
-            raise
+            print(f"DEBUG_UPLOAD_IMAGE inner Exception: {inner_e}")
+            raise HTTPException(status_code=500, detail=str(inner_e))
 
-    except HTTPException:
-        raise
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        print(f"DEBUG_UPLOAD_IMAGE major Exception: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/api/v1/upload/{upload_id}/analyze")
+async def analyze_artifact(upload_id: int, db: Session = Depends(get_db)):
+    """Triggers the detailed AI analysis and GraphRAG compilation for an Archived item."""
+    upload_rec = db.query(Upload).filter(Upload.id == upload_id).first()
+    if not upload_rec:
+        raise HTTPException(status_code=404, detail="Artifact not found")
+    if upload_rec.study_package:
+        return {"success": True, "message": "Already compiled"}
+
+    user = db.query(User).filter(User.id == upload_rec.user_id).first()
+    
+    permanent_path = upload_rec.file_path
+    file_name = upload_rec.file_name
+    student_level = user.student_level if user else "undergraduate"
+    
+    try:
+        if upload_rec.file_type in ["jpg", "jpeg", "png", "webp"]:
+            preprocessed = ImagePreprocessor.preprocess(permanent_path)
+            cv2.imwrite(permanent_path, preprocessed)
+            extraction = extract_from_image(permanent_path)
+            if not extraction.get("extracted_text"):
+                raise ValueError("Failed to extract text from image.")
+            text = preprocess_text(extraction["extracted_text"])
+        else:
+            parsed = parse_document(permanent_path)
+            text = preprocess_text(parsed["text"])
+
+        segregation = segregate_content(text, upload_rec.subject, upload_rec.topic, file_name)
+        raw_res = await chunk_and_process(
+            text, student_level,
+            segregation.get("subject"), segregation.get("topic"),
+            source_name=file_name,
+        )
+        study_package = raw_res["package"]
+        graph_stats = raw_res["stats"]
+
+        graph_meta = study_package.get("graph_metadata", {})
+        upload_rec.study_package = json.dumps(study_package)
+        upload_rec.graph_path = graph_meta.get("graph_path") or graph_stats.get("graph_path")
+        upload_rec.graph_triples_count = graph_meta.get("triples_count") or graph_stats.get("num_triples")
+        upload_rec.graph_confidence = graph_meta.get("extraction_confidence") or graph_stats.get("extraction_confidence")
+        db.commit()
+
+        from app.models import GraphEntity
+        for node_name in graph_stats.get("nodes", []):
+            entity = GraphEntity(
+                upload_id=upload_rec.id,
+                entity_name=str(node_name),
+                entity_type="vision_concept" if upload_rec.file_type in ["jpg", "png"] else "concept",
+            )
+            db.add(entity)
+        db.commit()
+        return {"success": True, "upload_id": upload_rec.id, "message": "Analysis compiled."}
     except Exception as e:
         import traceback
         traceback.print_exc()
-        print(f"DEBUG_UPLOAD_IMAGE major Exception: {e}")
-        return JSONResponse(status_code=400, content={"success": False, "error": str(e)})
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/v1/upload/{upload_id}")
+async def delete_artifact(upload_id: int, db: Session = Depends(get_db)):
+    """Delete an artifact from StudyMines."""
+    upload_rec = db.query(Upload).filter(Upload.id == upload_id).first()
+    if not upload_rec:
+        raise HTTPException(status_code=404, detail="Artifact not found")
+    db.delete(upload_rec)
+    db.commit()
+    return {"success": True}
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
 
 
 # ═══════════════════════════════════════════════════════════════
 # Graph Endpoints  (NEW — RLM-GraphRAG)
 # ═══════════════════════════════════════════════════════════════
+
+@app.get("/api/v1/uploads/all")
+async def get_all_uploads(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    """Fetch all document uploads for the current user."""
+    uploads = db.query(Upload).filter(Upload.user_id == user.id).all()
+    return [
+        {
+            "id": u.id, 
+            "file_name": u.file_name, 
+            "subject": u.subject, 
+            "topic": u.topic,
+            "created_at": u.uploaded_at.isoformat(),
+            "is_analyzed": bool(u.study_package)
+        }
+        for u in uploads
+    ]
 
 @app.post("/api/v1/graph/query")
 async def graph_query(
@@ -578,7 +697,8 @@ async def get_user_dashboard(user_id: str, db: Session = Depends(get_db)):
         },
         "uploads": [
             {"id": u.id, "file_name": u.file_name, "subject": u.subject, "topic": u.topic,
-             "graph_path": u.graph_path, "created_at": u.uploaded_at.isoformat()}
+             "graph_path": u.graph_path, "graph_triples_count": u.graph_triples_count, "created_at": u.uploaded_at.isoformat(), 
+             "is_analyzed": bool(u.study_package)}
             for u in uploads
         ],
         "uploads_count": len(uploads),

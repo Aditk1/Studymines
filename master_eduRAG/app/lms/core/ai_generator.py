@@ -49,7 +49,7 @@ def CognitiveAIGenerator(
         # Fetch weak concepts from the GraphRAG layer
         weak_entities = db.query(GraphEntity).filter(GraphEntity.mastery_score < 0.5).limit(3).all()
         if weak_entities:
-            concepts = ", ".join([e.name for e in weak_entities])
+            concepts = ", ".join([e.entity_name for e in weak_entities])
             system_context = f"Focus on these challenging student concepts: {concepts}."
 
     # 2. CONSTRUCT PROMPT
@@ -76,9 +76,8 @@ def CognitiveAIGenerator(
         response = requests.post(OLLAMA_URL, json={
             "model": MODEL_NAME,
             "prompt": prompt,
-            "stream": False,
-            "format": "json"
-        }, timeout=60)
+            "stream": False
+        }, timeout=120)
         
         if response.status_code == 200:
             result = response.json().get('response', '')
@@ -94,10 +93,11 @@ def CognitiveAIGenerator(
     logger.warning(f"Utilizing fallback (status {response.status_code if 'response' in locals() else 'error'})")
     return [
         {
-            "question": f"Synthesized question about {topic} (Demo Fallback)",
-            "options": ["A", "B", "C", "D"],
-            "answer": "A",
-            "explanation": "Generator fallback activated due to connection issues or model unavailability.",
+            "question": f"What is a core principle of {topic}? (Fallback Q{i+1})",
+            "options": [f"{topic} Option A", f"{topic} Option B", f"{topic} Option C", f"{topic} Option D"],
+            "answer": f"{topic} Option A",
+            "explanation": f"This is an auto-generated fallback question about {topic}. The AI model was unavailable.",
             "bloom_level": "remember"
         }
+        for i in range(num_items)
     ]

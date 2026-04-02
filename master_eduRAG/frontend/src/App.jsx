@@ -32,7 +32,7 @@ import AssessmentView from './components/AssessmentView'
 import Members from './components/Members'
 import TeacherStudio from './components/TeacherStudio'
 import Scheduler from './components/Scheduler'
-import { FileText, Users, MessageSquare, BookOpen, PenTool, Calendar } from 'lucide-react'
+import { FileText, Users, MessageSquare, BookOpen, PenTool, Calendar, Target } from 'lucide-react'
 import axios from 'axios'
 
 function App() {
@@ -121,7 +121,7 @@ function App() {
         { id: 'scheduler', label: 'Reminders', icon: Calendar },
         { id: 'upload', label: 'Generate', icon: UploadIcon },
         { id: 'classrooms', label: 'My Classes', icon: UserIcon },
-        { id: 'chat', label: 'Discussions', icon: MessageSquare },
+        { id: 'library', label: 'Library', icon: BookOpen },
         { id: 'assignments', label: 'Assignments', icon: FileText },
         { id: 'leaderboard', label: 'Ecosystem', icon: TrendingUp },
         { id: 'research', label: 'Laboratory', icon: Beaker },
@@ -217,7 +217,7 @@ function App() {
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="liquid-glass-strong flex-1 rounded-3xl overflow-hidden flex flex-col p-6 shadow-2xl"
+            className="liquid-glass-strong flex-1 rounded-3xl flex flex-col p-6 shadow-2xl relative"
           >
             {/* MOBILE TOP NAV (HIDDEN ON DESKTOP) */}
             <nav className="flex lg:hidden items-center justify-between mb-6">
@@ -375,7 +375,6 @@ function App() {
         </div>
       </div>
 
-      {/* GLOBAL COGNITIVE CONSULTANT (CHABOT) */}
       <Chatbot user={user} uploadId={selectedUploadId} />
 
       {/* MILESTONES DRAWER */}

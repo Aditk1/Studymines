@@ -23,27 +23,21 @@ export default function Dashboard({ userId, onOpenArtifact, onOpenAssessment }) 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [assignments, setAssignments] = useState([])
-  const [activeMenu, setActiveMenu] = useState(null)
+  const [deleteModalId, setDeleteModalId] = useState(null)
 
-  const toggleMenu = (e, id) => {
-    e.stopPropagation()
-    setActiveMenu(activeMenu === id ? null : id)
-  }
-
-  const handleDeleteArtifact = async (e, id) => {
-    e.stopPropagation()
-    setActiveMenu(null)
-    if (window.confirm("Are you sure you want to delete this artifact?")) {
-      try {
-        await axios.delete(`/api/v1/upload/${id}`)
-        setUserData(prev => ({
-          ...prev,
-          uploads: prev.uploads.filter(u => u.id !== id),
-          uploads_count: prev.uploads_count - 1
-        }))
-      } catch (err) {
-        console.error("Failed to delete artifact", err)
-      }
+  const confirmDelete = async () => {
+    if (!deleteModalId) return;
+    try {
+      await axios.delete(`/api/v1/upload/${deleteModalId}`)
+      setUserData(prev => ({
+        ...prev,
+        uploads: prev.uploads.filter(u => u.id !== deleteModalId),
+        uploads_count: prev.uploads_count - 1
+      }))
+    } catch (err) {
+      console.error("Failed to delete artifact", err)
+    } finally {
+      setDeleteModalId(null)
     }
   }
 
@@ -172,46 +166,14 @@ export default function Dashboard({ userId, onOpenArtifact, onOpenAssessment }) 
                         </button>
                       </div>
                       
-                      {/* 3-Dot Menu Button */}
+                      {/* Direct Delete Button */}
                       <button 
-                        onClick={(e) => toggleMenu(e, upload.id)}
-                        className="p-2 text-white/40 hover:text-white rounded-full hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100"
+                        onClick={(e) => { e.stopPropagation(); setDeleteModalId(upload.id) }}
+                        className="p-2 text-white/40 hover:text-red-400 rounded-full hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
+                        title="Delete Artifact"
                       >
-                        <MoreVertical size={16} />
+                        <Trash2 size={16} />
                       </button>
-
-                      {/* Dropdown Menu */}
-                      <AnimatePresence>
-                        {activeMenu === upload.id && (
-                          <motion.div 
-                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                            className="absolute right-12 top-10 w-40 liquid-glass-strong rounded-2xl shadow-2xl border border-white/10 z-[100] overflow-hidden"
-                          >
-                            <div className="flex flex-col">
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); setActiveMenu(null); onOpenArtifact(upload.id); }}
-                                className="flex items-center gap-2 px-4 py-3 hover:bg-white/10 text-xs font-semibold text-white/80 transition-colors text-left"
-                              >
-                                <Eye size={14} /> View Details
-                              </button>
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); setActiveMenu(null); navigate('/studio'); }}
-                                className="flex items-center gap-2 px-4 py-3 hover:bg-white/10 text-xs font-semibold text-white/80 transition-colors text-left border-y border-white/5"
-                              >
-                                <Edit size={14} /> Edit Artifact
-                              </button>
-                              <button 
-                                onClick={(e) => handleDeleteArtifact(e, upload.id)}
-                                className="flex items-center gap-2 px-4 py-3 hover:bg-red-500/20 text-xs font-semibold text-red-400 transition-colors text-left"
-                              >
-                                <Trash2 size={14} /> Delete
-                              </button>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
                     </div>
                   </div>
                 ))}
@@ -328,6 +290,50 @@ export default function Dashboard({ userId, onOpenArtifact, onOpenAssessment }) 
           </div>
         </div>
       </div>
+
+      {/* CUSTOM DELETE MODAL */}
+      <AnimatePresence>
+        {deleteModalId && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              onClick={() => setDeleteModalId(null)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm cursor-pointer"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-sm liquid-glass-strong border border-white/10 rounded-3xl p-8 shadow-2xl text-center z-10"
+            >
+              <div className="w-16 h-16 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center mx-auto mb-6">
+                <Trash2 size={24} />
+              </div>
+              <h3 className="text-xl font-medium tracking-tight mb-2">Delete Artifact?</h3>
+              <p className="text-sm text-white/60 mb-8 leading-relaxed">
+                Are you sure you want to permanently delete this study artifact from your cognitive archive? This action cannot be reversed.
+              </p>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setDeleteModalId(null)}
+                  className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm bg-white/5 hover:bg-white/10 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={confirmDelete}
+                  className="flex-1 py-3 px-4 rounded-xl font-semibold text-sm bg-red-500 hover:bg-red-600 text-white transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
     </div>
   )
 }

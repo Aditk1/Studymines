@@ -57,7 +57,7 @@ confidence:
     coherence_weight: 0.25
   min_confidence_threshold: 0.15   # triples below this are discarded
   batch_size: 8  
-  mode : "balanced"                  # LLM calls per batch
+  mode : "fast"                  # LLM calls per batch
 
 # -----------------------------------------------------------------------------
 # Contribution 2 — Community Detection

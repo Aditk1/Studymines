@@ -107,7 +107,7 @@ class RAGBridge:
                     if hasattr(result.graph, "communities")
                     else 0
                 ),
-                "nodes": list(result.graph.nodes()) if hasattr(result.graph, "nodes") else []
+                "nodes": result.graph.get_all_entities()
             }
         except Exception as exc:
             logger.error(f"Ingestion error: {exc}")

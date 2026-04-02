@@ -3,7 +3,12 @@ import { motion } from 'framer-motion'
 import { TrendingUp, Users, Brain, AlertTriangle, ArrowLeft } from 'lucide-react'
 import axios from 'axios'
 
+import { useSearchParams } from 'react-router-dom'
+
 export default function Analytics({ user, onBack }) {
+  const [searchParams] = useSearchParams()
+  const filterUserId = searchParams.get('user_id')
+  
   const [heatmapData, setHeatmapData] = useState([])
   const [riskData, setRiskData] = useState([])
   const [kpiData, setKpiData] = useState({ concepts_monitored: 0, global_mastery_pct: 0, high_struggle_count: 0 })
@@ -20,7 +25,14 @@ export default function Analytics({ user, onBack }) {
         
         setHeatmapData(heatmapRes.data)
         setKpiData(kpiRes.data)
-        setRiskData(riskRes.data)
+        
+        // Filter risk data if user_id is provided
+        const allRisks = riskRes.data
+        if (filterUserId) {
+            setRiskData(allRisks.filter(r => r.student_id === filterUserId))
+        } else {
+            setRiskData(allRisks)
+        }
       } catch (err) {
         console.error("Failed to fetch analytics", err)
       } finally {
@@ -42,9 +54,26 @@ export default function Analytics({ user, onBack }) {
           </button>
         )}
         <div>
-          <h2 className="text-3xl font-medium tracking-tighter">Curriculum <em className="text-white/60">Analytics</em></h2>
-          <p className="text-sm text-white/40 mt-1">Cognitive Heatmap & Global Mastery Insights</p>
+          <h2 className="text-3xl font-medium tracking-tighter">
+            {filterUserId ? `Student Performance` : `Curriculum Analytics`}
+          </h2>
+          <p className="text-sm text-white/40 mt-1">
+            {filterUserId ? `Specific Mastery Insights` : `Cognitive Heatmap & Global Mastery Insights`}
+          </p>
         </div>
+        {filterUserId && (
+          <button 
+            onClick={() => {
+                const url = new URL(window.location.href)
+                url.searchParams.delete('user_id')
+                window.history.replaceState({}, '', url)
+                window.location.reload()
+            }}
+            className="ml-auto px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-xs font-bold uppercase tracking-widest transition-all"
+          >
+            Clear Filter
+          </button>
+        )}
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -5,22 +5,34 @@ import functools
 from typing import Dict, Any, Callable
 from google.api_core import exceptions
 
-def clean_json_response(text: str) -> Dict[str, Any]:
+def clean_json_response(text: str):
     """
     Cleans LLM response text by removing markdown code blocks 
     and other non-JSON characters before parsing.
+    Handles both JSON objects ({...}) and JSON arrays ([...]).
     """
     # Remove markdown code blocks if present
-    # Matches ```json { ... } ``` or ``` { ... } ```
-    json_match = re.search(r'```(?:json)?\s*({.*})\s*```', text, re.DOTALL)
+    # Matches ```json ... ``` or ``` ... ```
+    json_match = re.search(r'```(?:json)?\s*([\[{].*[\]}])\s*```', text, re.DOTALL)
     if json_match:
         text = json_match.group(1)
     else:
-        # Fallback: try to find the first { and last }
-        first_brace = text.find('{')
-        last_brace = text.rfind('}')
-        if first_brace != -1 and last_brace != -1:
-            text = text[first_brace:last_brace + 1]
+        # Detect whether the response is an array or object
+        stripped = text.strip()
+        first_bracket = stripped.find('[')
+        first_brace = stripped.find('{')
+        
+        # Determine which comes first — array or object
+        if first_bracket != -1 and (first_brace == -1 or first_bracket < first_brace):
+            # It's a JSON array
+            last_bracket = stripped.rfind(']')
+            if last_bracket != -1:
+                text = stripped[first_bracket:last_bracket + 1]
+        elif first_brace != -1:
+            # It's a JSON object
+            last_brace = stripped.rfind('}')
+            if last_brace != -1:
+                text = stripped[first_brace:last_brace + 1]
     
     try:
         return json.loads(text.strip())

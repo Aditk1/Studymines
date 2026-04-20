@@ -78,6 +78,16 @@ class LLMClient:
                 self._client = ollama
             except ImportError:
                 logger.warning("ollama_not_installed", msg="Install with: pip install ollama")
+        elif provider == "groq":
+            try:
+                import os
+                from openai import AsyncOpenAI  # type: ignore
+                self._client = AsyncOpenAI(
+                    api_key=os.getenv("GROQ_API_KEY"),
+                    base_url=self.config.groq_base_url,
+                )
+            except ImportError:
+                logger.warning("openai_not_installed", msg="Install with: pip install openai")
         elif provider == "openai":
             try:
                 from openai import AsyncOpenAI  # type: ignore
@@ -90,6 +100,14 @@ class LLMClient:
                 self._client = anthropic.AsyncAnthropic()
             except ImportError:
                 logger.warning("anthropic_not_installed", msg="Install with: pip install anthropic")
+        elif provider == "gemini":
+            try:
+                import google.generativeai as genai
+                import os
+                genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+                self._client = genai
+            except ImportError:
+                logger.warning("gemini_not_installed", msg="Install with: pip install google-generativeai")
 
     async def generate(
         self,
@@ -124,12 +142,38 @@ class LLMClient:
 
         if provider == "ollama":
             return await self._call_ollama(prompt, sys_msg)
+        elif provider == "groq":
+            return await self._call_groq(prompt, sys_msg)
         elif provider == "openai":
             return await self._call_openai(prompt, sys_msg)
         elif provider == "anthropic":
             return await self._call_anthropic(prompt, sys_msg)
+        elif provider == "gemini":
+            return await self._call_gemini(prompt, sys_msg)
         else:
             raise ValueError(f"Unknown provider: {provider}")
+
+    async def _call_gemini(self, prompt: str, system: str) -> LLMResponse:
+        """Call Gemini via loop.run_in_executor for async compatibility."""
+        model_name = self.config.model
+        if not model_name.startswith("models/"):
+            model_name = f"models/{model_name}"
+            
+        model = self._client.GenerativeModel(model_name)
+        
+        def _sync_call():
+            return model.generate_content(f"SYSTEM: {system}\n\nUSER: {prompt}")
+
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(None, _sync_call)
+        
+        content = result.text if hasattr(result, "text") else str(result)
+        return LLMResponse(
+            content=content,
+            prompt_tokens=len(prompt.split()), # Rough estimation as Gemini doesn't always return counts
+            completion_tokens=len(content.split()),
+            model=model_name,
+        )
 
     async def _call_ollama(self, prompt: str, system: str) -> LLMResponse:
         """Call Ollama via its async interface (run sync in executor)."""
@@ -156,6 +200,28 @@ class LLMClient:
             content=content,
             prompt_tokens=usage.get("prompt_tokens", len(prompt.split())),
             completion_tokens=usage.get("completion_tokens", len(content.split())),
+            model=self.config.model,
+        )
+
+    async def _call_groq(self, prompt: str, system: str) -> LLMResponse:
+        from openai import AsyncOpenAI  # type: ignore
+
+        client: AsyncOpenAI = self._client
+        result = await client.chat.completions.create(
+            model=self.config.model,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=self.config.temperature,
+            max_tokens=self.config.max_tokens,
+        )
+        msg = result.choices[0].message.content or ""
+        usage = result.usage
+        return LLMResponse(
+            content=msg,
+            prompt_tokens=usage.prompt_tokens if usage else len(prompt.split()),
+            completion_tokens=usage.completion_tokens if usage else len(msg.split()),
             model=self.config.model,
         )
 

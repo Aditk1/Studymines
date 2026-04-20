@@ -45,6 +45,8 @@ export default function Chatbot({ user, uploadId }) {
           role: 'assistant', 
           text: response.data.answer,
           metadata: {
+            strategy: response.data.strategy,
+            graphStatus: response.data.graph_status,
             nodesVisited: response.data.nodes_visited,
             latency: response.data.latency_seconds
           }
@@ -165,7 +167,13 @@ export default function Chatbot({ user, uploadId }) {
                       {msg.metadata && (
                         <div className="flex items-center gap-2 px-1 text-[9px] font-bold uppercase tracking-widest text-white/30">
                           <Sparkles size={10} />
-                          <span>Graph Grounded • {msg.metadata.latency}s • Nodes: {msg.metadata.nodesVisited}</span>
+                          <span>
+                            {msg.metadata.strategy === 'stage_one_fallback' ? 'Stage 1 Fallback' : 'Graph Grounded'}
+                            {' • '}
+                            {msg.metadata.latency}s
+                            {' • '}
+                            Nodes: {msg.metadata.nodesVisited}
+                          </span>
                         </div>
                       )}
                     </div>

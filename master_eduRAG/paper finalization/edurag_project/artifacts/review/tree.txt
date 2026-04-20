@@ -1,0 +1,224 @@
+master_eduRAG
+├── app
+│   ├── clients
+│   │   ├── __init__.py
+│   │   ├── gemini_client.py
+│   │   ├── groq_client.py
+│   │   └── ollama_client.py
+│   ├── llm
+│   │   ├── __init__.py
+│   │   ├── epf_generator.py
+│   │   └── utils.py
+│   ├── lms
+│   │   ├── api
+│   │   │   ├── analytics.py
+│   │   │   └── lms_routes.py
+│   │   ├── core
+│   │   │   └── ai_generator.py
+│   │   ├── models
+│   │   │   ├── __init__.py
+│   │   │   ├── chat.py
+│   │   │   ├── classroom.py
+│   │   │   ├── exam.py
+│   │   │   └── material.py
+│   │   ├── auth.py
+│   │   ├── chat_socket.py
+│   │   └── risk_engine.py
+│   ├── parsers
+│   │   ├── __init__.py
+│   │   └── document_parser.py
+│   ├── utils
+│   │   ├── __init__.py
+│   │   ├── config_loader.py
+│   │   └── logger.py
+│   ├── vision
+│   │   ├── __init__.py
+│   │   ├── image_preprocessor.py
+│   │   └── vision_extractor.py
+│   ├── __init__.py
+│   ├── bridge.py
+│   ├── chunking.py
+│   ├── config.py
+│   ├── database.py
+│   ├── main.py
+│   ├── migrate.py
+│   ├── models.py
+│   ├── preprocessing.py
+│   ├── research_metrics.py
+│   └── segregation.py
+├── config
+│   ├── datasets
+│   │   ├── 2wikimultihop.yaml
+│   │   ├── educational.yaml
+│   │   └── musique.yaml
+│   ├── variants
+│   │   ├── ablation_c1_c2.yaml
+│   │   ├── ablation_c1_c2_c3.yaml
+│   │   ├── ablation_c1_only.yaml
+│   │   ├── baseline_graphrag.yaml
+│   │   ├── baseline_naive_rag.yaml
+│   │   └── full_system.yaml
+│   └── base.yaml
+├── data
+│   ├── chroma_db
+│   ├── graphs
+│   │   ├── graph_873c028bd92c4e5caf43426a4f625ae0_eduRAG_paper_final.pkl
+│   │   ├── graph_HTML_CSS_Complete_Guide.pkl
+│   │   ├── graph_WhatsApp Image 2026-03-20 at 11.46.30 AM (1).pkl
+│   │   └── graph_WhatsApp Image 2026-03-20 at 11.46.30 AM (2).pkl
+│   ├── uploads
+│   │   ├── 00ba247f-c638-4b70-9e66-86bf108a1341_WhatsApp Image 2026-03-20 at 11.46.30 AM (2).jpeg
+│   │   ├── 075d1c69-8ae3-4f4a-8004-f87fff00f74f.jpg
+│   │   ├── 12fa30a8-5714-41c3-b44a-69d7451d2796.jpg
+│   │   ├── 130d6138-a732-4b66-af12-52ef7550af3e_123.pdf
+│   │   ├── 14babcee-4e0e-463f-b778-2f18596cb8ee_WhatsApp Image 2026-03-20 at 11.46.30 AM (2).jpeg
+│   │   ├── 15fb43d4-c6ce-4b7a-81fa-f8c863aebf78_HTML_CSS_Complete_Guide.pdf
+│   │   ├── 1783a70e-4711-4224-9b37-a7913233c73b_HTML_CSS_Complete_Guide.pdf
+│   │   ├── 1d5fd15f-166f-4a93-b6e4-312d43ef30a4_HTML_CSS_Complete_Guide.pdf
+│   │   ├── 33679cbc-645d-4c64-b86b-bf3e6599c176.jpg
+│   │   ├── 3f56d57a-591d-4588-a776-c1b527c0c2c0_WhatsApp Image 2026-03-20 at 11.46.30 AM (2).jpeg
+│   │   ├── 48a3c2ac-c5f9-45a2-9300-70961cb7c0ed_WhatsApp Image 2026-03-20 at 11.46.30 AM.jpeg
+│   │   ├── 4935dcb4-8b6a-4ccd-9b07-7268de9d849a_WhatsApp Image 2026-03-20 at 11.46.30 AM (2).jpeg
+│   │   ├── 588efb90-9da5-4b02-8434-83f7bdac1ebf_WhatsApp Image 2026-03-20 at 11.46.30 AM (1).jpeg
+│   │   ├── 7d020ff1-340b-44b6-9a4e-bfa7f4ccd9ed.jpg
+│   │   ├── 7e960536-e8a6-4407-addf-7eb0f86daad4_HTML_CSS_Complete_Guide.pdf
+│   │   ├── 8b538435-7c2d-47b6-b821-26172ed95d87_WhatsApp Image 2026-03-20 at 11.46.30 AM.jpeg
+│   │   ├── 92807487-16c1-4273-9f80-ea1082e2a3dd.jpg
+│   │   ├── 953f99e8-735b-4e77-87e7-dc93f11159f5_eduRAG_v3.docx
+│   │   ├── 9bad3873-b786-429a-965a-ef8d386d17fe_eduRAG_paper_final.docx
+│   │   ├── a93bf86e-bb0a-4893-8d72-ad2e758850b3_test_dummy.txt
+│   │   ├── b13998a2-ac24-4317-aa43-2b22a77dca73_WhatsApp Image 2026-03-20 at 11.46.30 AM.jpeg
+│   │   ├── be1e702e-53a6-4da8-90ee-9b9ba5d1d357_WhatsApp Image 2026-03-20 at 11.46.30 AM (1).jpeg
+│   │   ├── beae6fc9-6ba6-44e9-9c79-ccdaeb884635_WhatsApp Image 2026-03-20 at 11.46.30 AM (1).jpeg
+│   │   ├── c29ec51d-1f31-4a2b-a939-3cb9000e7126.jpg
+│   │   ├── c66c420d-fb2f-4d98-9470-9d6fd186cd63_123.pdf
+│   │   ├── c875e268-5b99-45e7-b41e-aa2271557701_HTML_CSS_Complete_Guide.pdf
+│   │   ├── d093116e-1023-4e3d-8092-03c9954daecb_HTML_CSS_Complete_Guide.pdf
+│   │   ├── d8d893d8-8874-40f7-b133-d82b4a6d0a79_WhatsApp Image 2026-03-20 at 11.46.30 AM (1).jpeg
+│   │   ├── e63e6623-9739-49a7-82bf-e4bf91c6a7c6_WhatsApp Image 2026-03-20 at 11.46.30 AM (1).jpeg
+│   │   ├── e94c75c7-618b-4ed1-b477-4c866742b987_WhatsApp Image 2026-03-20 at 11.46.30 AM (1).jpeg
+│   │   ├── f7e9c2f3-0a3e-4bc2-bdd2-af593beb5050_audit_note.txt
+│   │   ├── f9541cba-8c61-41ff-9502-d421dd50db4a_HTML_CSS_Complete_Guide.pdf
+│   │   ├── fd2b5f23-7b94-4c5d-b3d0-8b60bafc6d4d_HTML_CSS_Complete_Guide.pdf
+│   │   └── ff6b3c8b-cfe4-40d5-9cb5-1ce8d98506f5_WhatsApp Image 2026-03-20 at 11.46.30 AM (2).jpeg
+│   └── edurag.db
+├── docs
+│   └── research
+│       ├── gemini-models.txt
+│       ├── research-paper-draft.md
+│       └── research-paper-v2.md
+├── frontend
+│   ├── public
+│   │   └── logo.png
+│   ├── src
+│   │   ├── components
+│   │   │   ├── Analytics.jsx
+│   │   │   ├── AssessmentView.jsx
+│   │   │   ├── Assignments.jsx
+│   │   │   ├── Auth.jsx
+│   │   │   ├── Chatbot.jsx
+│   │   │   ├── ClassroomDetail.jsx
+│   │   │   ├── Classrooms.jsx
+│   │   │   ├── Content.jsx
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── GlobalChat.jsx
+│   │   │   ├── GlobalContent.jsx
+│   │   │   ├── Header.jsx
+│   │   │   ├── KnowledgeMap.jsx
+│   │   │   ├── Leaderboard.jsx
+│   │   │   ├── Members.jsx
+│   │   │   ├── Navigation.jsx
+│   │   │   ├── Profile.jsx
+│   │   │   ├── Research.jsx
+│   │   │   ├── Scheduler.jsx
+│   │   │   ├── StudyLab.jsx
+│   │   │   ├── TeacherStudio.jsx
+│   │   │   └── Upload.jsx
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   ├── main.jsx
+│   │   └── supabase.js
+│   ├── .env
+│   ├── .gitignore
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── postcss.config.js
+│   ├── tailwind.config.js
+│   └── vite.config.js
+├── outputs
+│   ├── chroma_db
+│   │   └── chroma.sqlite3
+│   ├── review
+│   │   ├── file-list.txt
+│   │   └── function-inventory.md
+│   ├── api_smoke.json
+│   ├── backend_stderr.log
+│   ├── backend_stdout.log
+│   ├── browser_audit.js
+│   ├── browser_audit.json
+│   ├── frontend_stderr.log
+│   ├── frontend_stdout.log
+│   ├── inventory.json
+│   └── responsive_audit.json
+├── scripts
+│   ├── diagnostics
+│   │   ├── check_db.py
+│   │   ├── diagnostic_suite.py
+│   │   └── prod_stress_check.py
+│   ├── __init__.py
+│   ├── db_stats.py
+│   ├── db_stats_master.py
+│   ├── generate_research_plots.py
+│   ├── init_postgres_db.py
+│   ├── list_gemini_models.py
+│   ├── migrate_db.py
+│   ├── run_pdf_test.py
+│   ├── test_load_graph.py
+│   └── test_model_names.py
+├── src
+│   ├── community
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   └── detectors.py
+│   ├── evaluation
+│   │   ├── __init__.py
+│   │   └── metrics.py
+│   ├── graph
+│   │   ├── __init__.py
+│   │   └── knowledge_graph.py
+│   ├── ingestion
+│   │   ├── __init__.py
+│   │   ├── confidence.py
+│   │   ├── extractor.py
+│   │   ├── graph_builder.py
+│   │   └── loader.py
+│   ├── retrieval
+│   │   ├── __init__.py
+│   │   ├── answer_generator.py
+│   │   ├── context_assembler.py
+│   │   ├── retrieval.py
+│   │   └── seed_linker.py
+│   ├── traversal
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   ├── parallel_dispatcher.py
+│   │   └── rlm_traverser.py
+│   ├── utils
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── llm_client.py
+│   │   ├── logger.py
+│   │   └── vector_store.py
+│   ├── __init__.py
+│   └── pipeline.py
+├── tests
+│   └── fixtures
+│       └── HTML_CSS_Complete_Guide.pdf
+├── .env
+├── .env.example
+├── .gitignore
+├── master_edurag.db
+├── package-lock.json
+├── README.md
+└── requirements.txt

@@ -1,0 +1,2 @@
+2026-04-11 18:13:43 [info     ] EPFGenerator: Initialized with Gemini
+WARNING: DB init warning: 'charmap' codec can't encode character '\u2713' in position 0: character maps to <undefined>

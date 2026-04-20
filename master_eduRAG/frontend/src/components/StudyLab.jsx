@@ -270,10 +270,7 @@ export default function StudyLab({ uploadId, userId, onBack }) {
               <KnowledgeMap 
                 userId={userId} 
                 uploadId={uploadId}
-                onSelectConcept={(name) => {
-                  // Fallback to chat or just highlight
-                  console.log("Exploring concept:", name)
-                }} 
+                artifact={data}
               />
             </motion.div>
           )}

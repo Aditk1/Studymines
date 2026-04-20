@@ -72,7 +72,7 @@ class Pipeline:
             chunk_size=config.ingestion.chunk_size,
             chunk_overlap=config.ingestion.chunk_overlap,
         )
-        self.extractor = TripleExtractor(config.ingestion)
+        self.extractor = TripleExtractor(config.ingestion, config.llm)
         self.confidence_scorer = ConfidenceScorer(config.confidence, llm)
         self.graph_builder = GraphBuilder(embedding_model, vector_store)
         self.community_detector = build_community_detector(config.community, llm_client=llm)

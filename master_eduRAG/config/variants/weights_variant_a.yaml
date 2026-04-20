@@ -1,0 +1,6 @@
+# weights_variant_a — factuality-heavy (0.50 / 0.30 / 0.20)
+confidence:
+  axes:
+    factual_weight: 0.50
+    specificity_weight: 0.30
+    coherence_weight: 0.20

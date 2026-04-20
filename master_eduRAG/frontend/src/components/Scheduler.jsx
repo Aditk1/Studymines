@@ -20,7 +20,7 @@ export default function Scheduler({ user }) {
   const [showAddModal, setShowAddModal] = useState(false)
   const [isOptimizing, setIsOptimizing] = useState(false)
   const [minsRemaining, setMinsRemaining] = useState(142)
-  const [newEvent, setNewEvent] = useState({ title: '', type: 'study', priority: 'medium', due_at: new Date().toISOString().slice(0, 16) })
+  const [newEvent, setNewEvent] = useState({ title: '', reminder_type: 'study', priority: 'medium', due_at: new Date().toISOString().slice(0, 16) })
 
   useEffect(() => {
     fetchReminders()
@@ -52,7 +52,7 @@ export default function Scheduler({ user }) {
           await axios.post('/api/v1/lms/reminders', newEvent)
           setShowAddModal(false)
           fetchReminders()
-          setNewEvent({ title: '', type: 'study', priority: 'medium', due_at: new Date().toISOString().slice(0, 16) })
+          setNewEvent({ title: '', reminder_type: 'study', priority: 'medium', due_at: new Date().toISOString().slice(0, 16) })
       } catch (err) {
           console.error(err)
       }
@@ -310,8 +310,8 @@ export default function Scheduler({ user }) {
                         <div className="space-y-2">
                             <label className="text-[9px] font-black uppercase tracking-widest text-white/20 ml-2">Type</label>
                             <select 
-                                value={newEvent.type}
-                                onChange={(e) => setNewEvent({...newEvent, type: e.target.value})}
+                                value={newEvent.reminder_type}
+                                onChange={(e) => setNewEvent({...newEvent, reminder_type: e.target.value})}
                                 className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm focus:outline-none appearance-none"
                             >
                                 <option value="study" className="bg-[#121212]">Study Block</option>

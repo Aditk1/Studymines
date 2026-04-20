@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
+import {
   Plus, 
   Folder, 
   Settings, 
@@ -13,6 +13,13 @@ import {
   Target,
   PenTool
 } from 'lucide-react'
+
+const normalizeCourse = (course) => ({
+  ...course,
+  name: course?.name || course?.title || 'Untitled Course',
+  title: course?.title || course?.name || 'Untitled Course',
+  sections: course?.sections || [],
+})
 
 export default function TeacherStudio({ user }) {
   const [courses, setCourses] = useState([])
@@ -31,7 +38,7 @@ export default function TeacherStudio({ user }) {
           axios.get('/api/v1/lms/courses'),
           axios.get('/api/v1/uploads/all')
         ])
-        setCourses(courseRes.data)
+        setCourses((courseRes.data || []).map(normalizeCourse))
         setLibrary(libraryRes.data)
       } catch (err) {
         console.error(err)
@@ -49,7 +56,7 @@ export default function TeacherStudio({ user }) {
             title: newCourseName,
             description: "A specialized AI-powered learning path."
         })
-        const newCourse = { id: res.data.course_id, name: newCourseName, subject: "General" }
+        const newCourse = normalizeCourse({ id: res.data.course_id, title: newCourseName, subject: "General" })
         setCourses([...courses, newCourse])
         setSelectedCourse(newCourse)
         setIsCreating(false)
@@ -63,7 +70,7 @@ export default function TeacherStudio({ user }) {
       setIsArchitecting(true)
       try {
           await axios.post(`/api/v1/lms/studio/ai-architect/${selectedCourse.id}`, { artifact_id: artifactId })
-          const res = await axios.get(`/api/v1/lms/courses/${selectedCourse.id}/modules`)
+          const res = await axios.get(`/api/v1/lms/courses/${selectedCourse.id}/architecture`)
           setSelectedCourse({...selectedCourse, sections: res.data})
           setIsArchitecting(false)
       } catch (err) {
@@ -119,10 +126,10 @@ export default function TeacherStudio({ user }) {
                     key={course.id}
                     onClick={async () => {
                         try {
-                            const res = await axios.get(`/api/v1/lms/courses/${course.id}/modules`)
-                            setSelectedCourse({...course, sections: res.data})
+                            const res = await axios.get(`/api/v1/lms/courses/${course.id}/architecture`)
+                            setSelectedCourse({...normalizeCourse(course), sections: res.data})
                         } catch (err) {
-                            setSelectedCourse(course)
+                            setSelectedCourse(normalizeCourse(course))
                         }
                     }}
                     className={`p-6 rounded-3xl border transition-all cursor-pointer group
@@ -134,7 +141,7 @@ export default function TeacherStudio({ user }) {
                             <div className="w-10 h-10 liquid-glass rounded-xl flex items-center justify-center text-white/40 group-hover:text-white transition-colors">
                                 <PenTool size={18} />
                             </div>
-                            <h4 className="font-semibold text-white/90">{course.name}</h4>
+                            <h4 className="font-semibold text-white/90">{course.title || course.name}</h4>
                         </div>
                         <ChevronRight size={16} className={`transition-transform ${selectedCourse?.id === course.id ? 'rotate-90' : 'opacity-20'}`} />
                     </div>
@@ -149,7 +156,7 @@ export default function TeacherStudio({ user }) {
                 <>
                     <div className="flex items-center justify-between mb-10">
                         <div>
-                            <h3 className="text-2xl font-medium tracking-tight mb-1">{selectedCourse.name}</h3>
+                            <h3 className="text-2xl font-medium tracking-tight mb-1">{selectedCourse.title || selectedCourse.name}</h3>
                             <div className="flex items-center gap-4 text-xs text-white/40 font-medium">
                                 <span className="flex items-center gap-1"><Layout size={12} /> {selectedCourse.sections?.length || 0} Sections</span>
                                 <span className="flex items-center gap-1 text-white/60 font-bold uppercase tracking-widest"><Target size={12} /> Active Study</span>
@@ -176,7 +183,7 @@ export default function TeacherStudio({ user }) {
                                                      content_type: "document",
                                                      order: section.modules?.length || 0
                                                  })
-                                                 const res = await axios.get(`/api/v1/lms/courses/${selectedCourse.id}/modules`)
+                                                 const res = await axios.get(`/api/v1/lms/courses/${selectedCourse.id}/architecture`)
                                                  setSelectedCourse({...selectedCourse, sections: res.data})
                                              } catch (err) {
                                                  console.error(err)
@@ -257,7 +264,7 @@ export default function TeacherStudio({ user }) {
                                          title,
                                          order: selectedCourse.sections?.length || 0
                                      })
-                                     const res = await axios.get(`/api/v1/lms/courses/${selectedCourse.id}/modules`)
+                                     const res = await axios.get(`/api/v1/lms/courses/${selectedCourse.id}/architecture`)
                                      setSelectedCourse({...selectedCourse, sections: res.data})
                                  } catch(err) {
                                      console.error(err)

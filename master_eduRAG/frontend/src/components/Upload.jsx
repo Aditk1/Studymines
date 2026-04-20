@@ -47,6 +47,7 @@ export default function Upload({ userId, onOpenArtifact }) {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('user_id', userId)
+    formData.append('analyze', 'true')
     if (subject) formData.append('subject', subject)
     if (topic) formData.append('topic', topic)
     formData.append('student_level', studentLevel)

@@ -1,13 +1,12 @@
-"""
-Document chunking and map-reduce summarisation for long documents.
-Integrates with the RAG Bridge for graph enrichment.
-"""
-
 import json
 from typing import Dict, List, Optional
-import google.generativeai as genai
-from app.config import CHUNK_SIZE, CHUNK_OVERLAP, DEFAULT_MODEL
-from app.llm.utils import clean_json_response, retry_with_backoff
+from app.config import CHUNK_SIZE, CHUNK_OVERLAP
+from app.llm.utils import clean_json_response
+
+
+PROCESSING_GRAPH_STATUS = "processing_graph"
+GRAPH_GROUNDED_STATUS = "graph_grounded"
+GRAPH_FAILED_STATUS = "graph_failed"
 
 
 class DocumentChunker:
@@ -49,17 +48,17 @@ class DocumentChunker:
         return len(chunks) > 5
 
 
+from app.llm.epf_generator import EPFGenerator
+
 class MapReduceProcessor:
     """Map-Reduce strategy for long-document study-package generation."""
 
     def __init__(self, api_key: Optional[str] = None):
-        if api_key:
-            genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(DEFAULT_MODEL)
+        self.generator = EPFGenerator(api_key)
 
-    @retry_with_backoff(retries=5)
     def _generate_content(self, prompt: str):
-        return self.model.generate_content(prompt)
+        # Use the unified generation logic from EPFGenerator
+        return self.generator._generate_content(prompt)
 
     def map_chunk(self, chunk: str, chunk_index: int, total_chunks: int) -> str:
         prompt = f"""You are summarizing part {chunk_index + 1} of {total_chunks} of an educational document.
@@ -71,7 +70,7 @@ Text chunk:
 
 Provide a comprehensive summary. Respond with only the summary text."""
         try:
-            return self._generate_content(prompt).text
+            return self._generate_content(prompt)
         except Exception:
             return chunk[:2000]
 
@@ -107,7 +106,8 @@ Respond ONLY with valid JSON:
 }}"""
 
         try:
-            result = clean_json_response(self._generate_content(prompt).text)
+            result_text = self._generate_content(prompt)
+            result = clean_json_response(result_text)
             return {
                 "success": True, "data": result, "student_level": student_level,
                 "processing_method": "map_reduce", "chunks_processed": len(chunk_summaries),
@@ -125,16 +125,15 @@ Respond ONLY with valid JSON:
         return self.reduce_summaries(summaries, student_level, subject, topic)
 
 
-async def chunk_and_process(
+async def chunk_and_generate_eps(
     text: str,
     student_level: str = "undergraduate",
     subject: Optional[str] = None,
     topic: Optional[str] = None,
     api_key: Optional[str] = None,
-    source_name: str = "document_upload",
 ) -> Dict:
     """
-    Chunk text → generate study package → enrich via RLM-GraphRAG bridge.
+    PHASE 1: Chunk text → generate initial Gemini-powered study package (FAST).
     """
     chunker = DocumentChunker()
     chunks = chunker.chunk_text(text)
@@ -147,13 +146,109 @@ async def chunk_and_process(
         combined = "\n\n".join(chunks)
         print(f"Document has {len(chunks)} chunk(s) — using direct EPF generation")
         study_package = generate_study_package(combined, student_level, subject, topic, api_key)
+    
+    return study_package
 
-    # ── RAG Enrichment (Milestone 1 & 2) ──
+
+async def enrich_study_package_with_rag(
+    upload_id: int,
+    text: str,
+    source_name: str,
+    existing_package: Dict,
+) -> Dict:
+    """
+    PHASE 2: Ingest into GraphRAG (LLAMA) → Enrich Package → Notify (BACKGROUND).
+    """
     try:
         from app.bridge import process_with_rag
-        print("💡 Enriching study package with RLM-GraphRAG Cognitive Core...")
-        pkg, stats = await process_with_rag(text, source_name, study_package)
+        from app.database import SessionLocal
+        from app.models import Upload, LMSReminder, GraphEntity
+        from datetime import datetime
+        import json
+
+        print(f"💡 [Background] Building Deep Connection Graph for {source_name} using Llama...")
+        pkg, stats = await process_with_rag(text, source_name, existing_package)
+        
+        # Persist to DB
+        with SessionLocal() as db:
+            upload_rec = db.query(Upload).filter(Upload.id == upload_id).first()
+            if not upload_rec:
+                return {"package": pkg, "stats": stats}
+
+            graph_meta = pkg.get("graph_metadata", {})
+            pkg["status"] = GRAPH_GROUNDED_STATUS if stats.get("success") else GRAPH_FAILED_STATUS
+
+            upload_rec.study_package = json.dumps(pkg)
+            upload_rec.graph_path = graph_meta.get("graph_path") or stats.get("graph_path")
+            upload_rec.graph_triples_count = graph_meta.get("triples_count") or stats.get("num_triples")
+            upload_rec.graph_confidence = (
+                graph_meta.get("extraction_confidence")
+                or round(float(stats.get("confidence_ratio", 0)) * 100, 2)
+            )
+
+            existing_names = {
+                name for (name,) in db.query(GraphEntity.entity_name)
+                .filter(GraphEntity.upload_id == upload_id)
+                .all()
+            }
+            for node_name in stats.get("nodes", []):
+                if node_name in existing_names:
+                    continue
+                entity = GraphEntity(
+                    upload_id=upload_id,
+                    entity_name=node_name,
+                    entity_type="concept",
+                    confidence=upload_rec.graph_confidence,
+                )
+                db.add(entity)
+
+            if stats.get("success"):
+                notification = LMSReminder(
+                    user_id=upload_rec.user_id,
+                    title="Deep Connection Synthesis Complete",
+                    description=f"Deep Connection Synthesis for {source_name} is complete. Your Graph is now fully grounded.",
+                    reminder_type="task",
+                    due_at=datetime.utcnow(),
+                    priority="low",
+                    status="pending"
+                )
+                db.add(notification)
+
+            db.commit()
+            print(f"🚀 [Background] Llama finished processing '{source_name}'. Notification sent.")
+        
         return {"package": pkg, "stats": stats}
     except Exception as e:
-        print(f"⚠ RAG enrichment skipped: {e}")
-        return {"package": study_package, "stats": {}}
+        try:
+            from app.database import SessionLocal
+            from app.models import Upload
+
+            failed_package = dict(existing_package or {})
+            failed_package["status"] = GRAPH_FAILED_STATUS
+
+            with SessionLocal() as db:
+                upload_rec = db.query(Upload).filter(Upload.id == upload_id).first()
+                if upload_rec:
+                    upload_rec.study_package = json.dumps(failed_package)
+                    db.commit()
+        except Exception:
+            pass
+
+        print(f"❌ [Background] Llama processing failed: {e}")
+        return {"package": existing_package, "stats": {}}
+
+
+# Kept for backward compatibility if needed by tests, but calls Phase 1 + 2 sequentially
+async def chunk_and_process(
+    text: str,
+    student_level: str = "undergraduate",
+    subject: Optional[str] = None,
+    topic: Optional[str] = None,
+    api_key: Optional[str] = None,
+    source_name: str = "document_upload",
+) -> Dict:
+    study_package = await chunk_and_generate_eps(text, student_level, subject, topic, api_key)
+    # This sequential version is only for synchronous tests. Real app uses background tasks.
+    from app.bridge import process_with_rag
+    pkg, stats = await process_with_rag(text, source_name, study_package)
+    return {"package": pkg, "stats": stats}

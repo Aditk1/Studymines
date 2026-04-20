@@ -17,7 +17,6 @@ class Exam(Base):
     time_limit_minutes = Column(Integer, nullable=True)
     due_date = Column(DateTime, nullable=True)
     
-    from sqlalchemy.dialects.postgresql import UUID
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -42,7 +41,6 @@ class ExamSubmission(Base):
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     exam_id = Column(String(36), ForeignKey("lms_exams.id", ondelete="CASCADE"), nullable=False, index=True)
-    from sqlalchemy.dialects.postgresql import UUID
     student_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
 
     answers = Column(JSON, nullable=False)

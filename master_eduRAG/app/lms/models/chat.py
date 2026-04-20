@@ -29,7 +29,6 @@ class ChatMessage(Base):
     __tablename__ = "lms_chat_messages"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
-    from sqlalchemy.dialects.postgresql import UUID
     room_id = Column(String(36), ForeignKey("lms_chat_rooms.id", ondelete="CASCADE"), nullable=False, index=True)
     sender_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
     

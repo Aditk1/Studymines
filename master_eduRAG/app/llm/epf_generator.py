@@ -1,13 +1,9 @@
-"""
-Educational Prompt Framework (EPF) for content generation.
-Uses Gemini to generate leveled summaries, concepts, flashcards, and questions.
-"""
-
-import json
 from typing import Dict, List, Optional
-from app.clients import configure_gemini, get_model
+from app.config import OLLAMA_MODEL, GOOGLE_API_KEY, GROQ_API_KEY
+from app.clients import ollama_generate
+from app.llm.multi_provider import LLMClient, AllProvidersExhaustedError
 from app.llm.utils import clean_json_response, retry_with_backoff
-from app.utils import get_logger
+from src.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -17,68 +13,35 @@ class EPFGenerator:
 
     def __init__(self, api_key: Optional[str] = None):
         """
-        Initialize EPF generator with Gemini API.
-        
-        Args:
-            api_key: Gemini API key (or use GOOGLE_API_KEY env var).
+        Initialize EPF generator with multi-provider fallback (Groq -> Cerebras -> Gemini -> OpenRouter).
+        Final local fallback is Ollama.
         """
-        if api_key:
-            configure_gemini(api_key)
-        self.model = get_model()
+        # The LLMClient handles the cloud provider chain (Groq -> Cerebras -> Gemini -> OpenRouter)
+        try:
+            self.llm_client = LLMClient()
+            logger.info("EPFGenerator: Initialized with Multi-Provider Cloud Client")
+        except Exception as e:
+            logger.error(f"EPFGenerator: Multi-Provider Client init failed: {e}")
+            self.llm_client = None
 
-    @retry_with_backoff(retries=5)
-    def _call_gemini(self, prompt: str):
-        """Helper to call Gemini with retry logic."""
-        return self.model.generate_content(prompt)
+    @retry_with_backoff(retries=3)
+    def _call_ollama(self, prompt: str):
+        """Call local Ollama reasoning pipeline."""
+        return ollama_generate(prompt, model=OLLAMA_MODEL)
 
     def _generate_content(self, prompt: str) -> str:
-        """Attempts Gemini first, falls back to Ollama if all retries fail."""
-        try:
-            response = self._call_gemini(prompt)
-            return response.text
-        except Exception as e:
-            logger.warning(f"Gemini failed after retries: {e}. Falling back to Ollama...")
-            return self._call_ollama_fallback(prompt)
-
-    def _call_ollama_fallback(self, prompt: str) -> str:
-        import os
-        import requests
-        
-        ollama_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").rstrip("/")
-        url = f"{ollama_url}/api/generate"
-        
-        try:
-            # Attempt to get the model from config, default to llama3.2:3b
-            from app.utils import load_config
-            config_path = None
+        """Centralized generation call (Cloud Chain -> Local Ollama)."""
+        # A. Try Cloud Provider Chain
+        if self.llm_client:
             try:
-                from app.utils import get_config_path
-                config_path = get_config_path("base.yaml")
-            except Exception:
-                pass
-            
-            if config_path:
-                config = load_config(str(config_path))
-                model = config.llm.model
-            else:
-                model = "llama3.2:3b"
-        except Exception:
-            model = "llama3.2:3b"
+                return self.llm_client.complete(prompt)
+            except AllProvidersExhaustedError as e:
+                logger.warning(f"EPFGenerator: All cloud providers failed. Falling back to local Ollama. Error: {e}")
+            except Exception as e:
+                logger.warning(f"EPFGenerator: Cloud chain error: {e}. Trying local Ollama.")
 
-        payload = {
-            "model": model,
-            "prompt": prompt,
-            "stream": False
-        }
-        
-        logger.info(f"Using Ollama fallback with model: {model}")
-        try:
-            resp = requests.post(url, json=payload, timeout=120)
-            resp.raise_for_status()
-            return resp.json().get("response", "")
-        except Exception as fallback_err:
-            logger.error(f"Ollama fallback failed: {fallback_err}")
-            raise fallback_err
+        # B. Local Fallback
+        return self._call_ollama(prompt)
 
     def generate_outputs(
         self,

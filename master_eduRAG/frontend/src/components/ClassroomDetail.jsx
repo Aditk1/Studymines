@@ -130,8 +130,9 @@ export default function ClassroomDetail({ classroomId, user, onBack, onOpenArtif
         .then(res => setMessages(res.data || []))
         .catch(err => console.error("History fetch error:", err))
 
+      const token = localStorage.getItem('studymines_token');
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/api/v1/ws/chat/${classroom.chat_room_id}`;
+      const wsUrl = `${protocol}//${window.location.host}/api/v1/ws/chat/${classroom.chat_room_id}?token=${token}`;
       const socket = new WebSocket(wsUrl);
       socket.onmessage = (event) => {
         try {

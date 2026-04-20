@@ -106,6 +106,7 @@ function App() {
   const navItems = user?.role === 'teacher' 
     ? [
         { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { id: 'upload', label: 'Generate', icon: UploadIcon },
         { id: 'classrooms', label: 'Classrooms', icon: UserIcon },
         { id: 'studio', label: 'Studio', icon: PenTool },
         { id: 'library', label: 'Library', icon: BookOpen },

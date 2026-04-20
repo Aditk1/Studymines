@@ -1,0 +1,43 @@
+{
+  "start_time": "2026-04-13T11:46:43.596258",
+  "phases": {
+    "setup": {
+      "status": "complete",
+      "start": "2026-04-13T11:46:43.596234",
+      "end": "2026-04-13T11:46:43.638745"
+    },
+    "graph_construction": {
+      "status": "complete",
+      "start": "2026-04-13T11:46:43.639525",
+      "end": "2026-04-13T11:46:43.642296"
+    },
+    "variant_runs": {
+      "status": "complete",
+      "start": "2026-04-13T11:46:43.642845",
+      "end": "2026-04-13T11:46:43.655790"
+    },
+    "community_analysis": {
+      "status": "complete",
+      "start": "2026-04-13T11:46:43.656397",
+      "end": "2026-04-13T11:46:43.656922"
+    },
+    "weight_sensitivity": {
+      "status": "complete",
+      "start": "2026-04-13T11:46:43.657421",
+      "end": "2026-04-13T11:46:43.658258"
+    },
+    "aggregation": {
+      "status": "complete",
+      "start": "2026-04-13T11:46:43.658802",
+      "end": "2026-04-13T11:46:43.659487"
+    },
+    "complete": {
+      "status": "complete",
+      "start": null,
+      "end": null
+    }
+  },
+  "runs_completed": 21,
+  "total_runs": 18,
+  "errors": []
+}

@@ -1,0 +1,675 @@
+[
+  {
+    "name": "student_signup",
+    "method": "POST",
+    "path": "/api/v1/auth/signup",
+    "status": 400,
+    "ok": false,
+    "body": {
+      "error": "Email already registered"
+    },
+    "error": null
+  },
+  {
+    "name": "teacher_signup",
+    "method": "POST",
+    "path": "/api/v1/auth/signup",
+    "status": 400,
+    "ok": false,
+    "body": {
+      "error": "Email already registered"
+    },
+    "error": null
+  },
+  {
+    "name": "student_login",
+    "method": "POST",
+    "path": "/api/v1/auth/login",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "success": true,
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwNDljZjliMC1mY2FkLTQyNjgtYjhhZC1kOTg5YmFlNzM3Y2UiLCJleHAiOjE3NzY1MTY0ODEsImF1ZCI6ImF1dGhlbnRpY2F0ZWQifQ.xGrO-z0_29WUQvrio5cS5vxleXTEpFHSutz-Kewjx5s",
+      "token_type": "bearer",
+      "user": {
+        "id": "049cf9b0-fcad-4268-b8ad-d989bae737ce",
+        "name": "Audit Student",
+        "email": "audit_student@example.com",
+        "role": "student",
+        "student_level": "undergraduate"
+      }
+    },
+    "error": null
+  },
+  {
+    "name": "teacher_login",
+    "method": "POST",
+    "path": "/api/v1/auth/login",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "success": true,
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyYmNkYWE0MS1hYzU1LTQzMWUtYjQ2Mi01OGU0MDkzOWIyYzMiLCJleHAiOjE3NzY1MTY0ODEsImF1ZCI6ImF1dGhlbnRpY2F0ZWQifQ.CLpB9tDLzJf5nfTx2Pss9zgZbeaRDLeCx3pioz0Kfws",
+      "token_type": "bearer",
+      "user": {
+        "id": "2bcdaa41-ac55-431e-b462-58e40939b2c3",
+        "name": "Audit Teacher",
+        "email": "audit_teacher@teacher.edu",
+        "role": "teacher",
+        "student_level": "postgraduate"
+      }
+    },
+    "error": null
+  },
+  {
+    "name": "root",
+    "method": "GET",
+    "path": "/",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "name": "master_eduRAG",
+      "version": "1.0.0",
+      "status": "running",
+      "modules": {
+        "studymines": "active",
+        "rlm_graphrag": "active"
+      },
+      "endpoints": {
+        "upload_document": "/api/v1/upload/document",
+        "upload_image": "/api/v1/upload/image",
+        "graph_query": "/api/v1/graph/query",
+        "graph_view": "/api/v1/graph/view/{upload_id}",
+        "graph_entities": "/api/v1/graph/entities?upload_id=...",
+        "user_dashboard": "/api/v1/users/{user_id}",
+        "leaderboard": "/api/v1/leaderboard"
+      }
+    },
+    "error": null
+  },
+  {
+    "name": "health",
+    "method": "GET",
+    "path": "/health",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "status": "ok"
+    },
+    "error": null
+  },
+  {
+    "name": "leaderboard",
+    "method": "GET",
+    "path": "/api/v1/leaderboard",
+    "status": 200,
+    "ok": true,
+    "body": [
+      {
+        "rank": 1,
+        "user_id": "38f0f1b0-cae2-4a50-8a39-f2017097bcdd",
+        "name": "scholarA",
+        "email": "scholar@edu.com",
+        "uploads_count": 1,
+        "score": 0.0
+      },
+      {
+        "rank": 2,
+        "user_id": "2bcdaa41-ac55-431e-b462-58e40939b2c3",
+        "name": "Audit Teacher",
+        "email": "audit_teacher@teacher.edu",
+        "uploads_count": 0,
+        "score": 0.0
+      },
+      {
+        "rank": 3,
+        "user_id": "049cf9b0-fcad-4268-b8ad-d989bae737ce",
+        "name": "Audit Student",
+        "email": "audit_student@example.com",
+        "uploads_count": 0,
+        "score": 0.0
+      }
+    ],
+    "error": null
+  },
+  {
+    "name": "ecosystem_stats",
+    "method": "GET",
+    "path": "/api/v1/stats/ecosystem",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "knowledge_retained": 80.0,
+      "total_study_hours": 0.0,
+      "total_users": 3,
+      "total_artifacts": 1,
+      "active_now": 28
+    },
+    "error": null
+  },
+  {
+    "name": "research_metrics",
+    "method": "GET",
+    "path": "/api/v1/research/metrics",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "success": true,
+      "summary_metrics": {
+        "edusum": {
+          "rouge1": null,
+          "rouge2": null,
+          "rougeL": null,
+          "bertscore": null,
+          "meteor": null,
+          "status": "unavailable",
+          "note": "No gold reference summaries or exported benchmark logs were found in this repo snapshot."
+        },
+        "baselines": {}
+      },
+      "graph_metrics": {
+        "per_artifact": [
+          {
+            "artifact": "graph_873c028bd92c4e5caf43426a4f625ae0_eduRAG_paper_final.pkl",
+            "nodes": 295,
+            "edges": 238,
+            "communities": 72,
+            "weighted_modularity": 0.8421,
+            "mean_community_coherence": 0.195,
+            "avg_confidence": 0.6004
+          },
+          {
+            "artifact": "graph_HTML_CSS_Complete_Guide.pkl",
+            "nodes": 329,
+            "edges": 235,
+            "communities": 97,
+            "weighted_modularity": 0.9715,
+            "mean_community_coherence": 0.2892,
+            "avg_confidence": 0.5726
+          },
+          {
+            "artifact": "graph_WhatsApp Image 2026-03-20 at 11.46.30 AM (1).pkl",
+            "nodes": 30,
+            "edges": 16,
+            "communities": 14,
+            "weighted_modularity": 0.9171,
+            "mean_community_coherence": 0.3388,
+            "avg_confidence": 0.7059
+          },
+          {
+            "artifact": "graph_WhatsApp Image 2026-03-20 at 11.46.30 AM (2).pkl",
+            "nodes": 27,
+            "edges": 16,
+            "communities": 11,
+            "weighted_modularity": 0.8858,
+            "mean_community_coherence": 0.3239,
+            "avg_confidence": 0.6653
+          }
+        ],
+        "aggregate": {
+          "graph_artifacts": 4,
+          "avg_nodes": 170.25,
+          "avg_edges": 126.25,
+          "avg_communities": 48.5,
+          "avg_weighted_modularity": 0.9041,
+          "avg_mean_community_coherence": 0.2867,
+          "avg_confidence": 0.6361
+        },
+        "primary_graph": {
+          "artifact": "graph_HTML_CSS_Complete_Guide.pkl",
+          "nodes": 329,
+          "edges": 235,
+          "communities": 97,
+          "weighted_modularity": 0.9715,
+          "mean_community_coherence": 0.2892,
+          "avg_confidence": 0.5726
+        }
+      },
+      "vision_metrics": {
+        "saeocr": {
+          "wer": null,
+          "cer": null,
+          "accuracy": null
+        },
+        "tesseract": {
+          "wer": null,
+          "cer": null,
+          "accuracy": null
+        },
+        "status": "unavailable",
+        "note": "No labeled OCR benchmark set or exported vision-eval logs were found in this repo snapshot."
+      },
+      "educational_utility": {},
+      "metadata": {
+        "generated_at": "2026-04-11T12:48:05.050330+00:00",
+        "source": "live_repo_snapshot",
+        "db": {
+          "uploads_total": 1,
+          "uploads_with_graph": 0,
+          "uploads_with_summary": 1
+        },
+        "system_config": {
+          "llm_provider": "ollama",
+          "llm_model": "llama3.2:3b",
+          "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+          "temperature": 0.0,
+          "chunk_size": 200,
+          "chunk_overlap": 64,
+          "context_max_tokens": 3000,
+          "parallel_enabled": true,
+          "max_concurrent_entities": 5,
+          "community_strategy": "cw_leiden",
+          "traversal_strategy": "rlm"
+        }
+      }
+    },
+    "error": null
+  },
+  {
+    "name": "student_me",
+    "method": "GET",
+    "path": "/api/v1/users/me",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "user": {
+        "id": "049cf9b0-fcad-4268-b8ad-d989bae737ce",
+        "name": "Audit Student",
+        "email": "audit_student@example.com",
+        "student_level": "undergraduate",
+        "role": "student"
+      },
+      "uploads": [],
+      "uploads_count": 0,
+      "performance": {
+        "avg_score": 0,
+        "total_scores": 0,
+        "study_hours": 0.0
+      }
+    },
+    "error": null
+  },
+  {
+    "name": "student_profile",
+    "method": "GET",
+    "path": "/api/v1/users/049cf9b0-fcad-4268-b8ad-d989bae737ce",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "user": {
+        "id": "049cf9b0-fcad-4268-b8ad-d989bae737ce",
+        "name": "Audit Student",
+        "email": "audit_student@example.com",
+        "student_level": "undergraduate",
+        "role": "student"
+      },
+      "uploads": [],
+      "uploads_count": 0,
+      "performance": {
+        "avg_score": 0,
+        "total_scores": 0,
+        "study_hours": 0.0
+      }
+    },
+    "error": null
+  },
+  {
+    "name": "student_uploads_all",
+    "method": "GET",
+    "path": "/api/v1/uploads/all",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  },
+  {
+    "name": "student_reminders_get",
+    "method": "GET",
+    "path": "/api/v1/lms/reminders",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  },
+  {
+    "name": "student_assignments_get",
+    "method": "GET",
+    "path": "/api/v1/lms/assignments",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  },
+  {
+    "name": "student_global_chat",
+    "method": "GET",
+    "path": "/api/v1/lms/chats/global",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  },
+  {
+    "name": "student_materials_global",
+    "method": "GET",
+    "path": "/api/v1/lms/materials/global",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  },
+  {
+    "name": "student_learning_paths",
+    "method": "GET",
+    "path": "/api/v1/lms/learning-paths?user_id=049cf9b0-fcad-4268-b8ad-d989bae737ce",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "user_id": "049cf9b0-fcad-4268-b8ad-d989bae737ce",
+      "recommendations": [],
+      "path_status": "stable"
+    },
+    "error": null
+  },
+  {
+    "name": "student_classrooms_list",
+    "method": "GET",
+    "path": "/api/v1/lms/classrooms",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  },
+  {
+    "name": "student_classrooms_explore",
+    "method": "GET",
+    "path": "/api/v1/lms/classrooms/explore",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  },
+  {
+    "name": "teacher_courses_list_before",
+    "method": "GET",
+    "path": "/api/v1/lms/courses",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  },
+  {
+    "name": "teacher_create_course",
+    "method": "POST",
+    "path": "/api/v1/lms/courses",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "success": true,
+      "course_id": 1
+    },
+    "error": null
+  },
+  {
+    "name": "teacher_course_architecture",
+    "method": "GET",
+    "path": "/api/v1/lms/courses/1/architecture",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  },
+  {
+    "name": "teacher_course_modules_missing",
+    "method": "GET",
+    "path": "/api/v1/lms/courses/1/modules",
+    "status": 404,
+    "ok": false,
+    "body": {
+      "detail": "Not Found"
+    },
+    "error": null
+  },
+  {
+    "name": "teacher_create_section",
+    "method": "POST",
+    "path": "/api/v1/lms/courses/1/sections",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "success": true,
+      "section_id": 1
+    },
+    "error": null
+  },
+  {
+    "name": "teacher_create_module",
+    "method": "POST",
+    "path": "/api/v1/lms/sections/1/modules",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "success": true,
+      "module_id": 1
+    },
+    "error": null
+  },
+  {
+    "name": "teacher_course_architecture_after_module",
+    "method": "GET",
+    "path": "/api/v1/lms/courses/1/architecture",
+    "status": 200,
+    "ok": true,
+    "body": [
+      {
+        "id": 1,
+        "title": "Section Alpha",
+        "summary": null,
+        "order": 0,
+        "modules": [
+          {
+            "id": 1,
+            "title": "Module One",
+            "type": "document",
+            "is_conditional": false
+          }
+        ]
+      }
+    ],
+    "error": null
+  },
+  {
+    "name": "teacher_create_classroom",
+    "method": "POST",
+    "path": "/api/v1/lms/classrooms",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "name": "Audit Classroom",
+      "description": "Created by audit script",
+      "subject": "QA",
+      "id": "8b27dfde-a254-4f45-91c2-e90af6fde9ba",
+      "code": "AUDI-4A8518",
+      "created_by": "2bcdaa41-ac55-431e-b462-58e40939b2c3",
+      "created_at": "2026-04-11T12:48:20.493996",
+      "member_count": 0,
+      "chat_room_id": null
+    },
+    "error": null
+  },
+  {
+    "name": "teacher_classroom_detail",
+    "method": "GET",
+    "path": "/api/v1/lms/classrooms/8b27dfde-a254-4f45-91c2-e90af6fde9ba",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "name": "Audit Classroom",
+      "description": "Created by audit script",
+      "subject": "QA",
+      "id": "8b27dfde-a254-4f45-91c2-e90af6fde9ba",
+      "code": "AUDI-4A8518",
+      "created_by": "2bcdaa41-ac55-431e-b462-58e40939b2c3",
+      "created_at": "2026-04-11T12:48:20.493996",
+      "member_count": 1,
+      "chat_room_id": "e57cc288-6324-4513-918a-950895c5e04a"
+    },
+    "error": null
+  },
+  {
+    "name": "teacher_classroom_materials",
+    "method": "GET",
+    "path": "/api/v1/lms/classrooms/8b27dfde-a254-4f45-91c2-e90af6fde9ba/materials",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  },
+  {
+    "name": "teacher_classroom_exams",
+    "method": "GET",
+    "path": "/api/v1/lms/classrooms/8b27dfde-a254-4f45-91c2-e90af6fde9ba/exams",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  },
+  {
+    "name": "student_join_classroom",
+    "method": "POST",
+    "path": "/api/v1/lms/classrooms/join",
+    "status": 422,
+    "ok": false,
+    "body": {
+      "detail": [
+        {
+          "type": "missing",
+          "loc": [
+            "body",
+            "code"
+          ],
+          "msg": "Field required",
+          "input": {
+            "classroom_id": "8b27dfde-a254-4f45-91c2-e90af6fde9ba"
+          }
+        }
+      ]
+    },
+    "error": null
+  },
+  {
+    "name": "teacher_classroom_requests",
+    "method": "GET",
+    "path": "/api/v1/lms/classrooms/8b27dfde-a254-4f45-91c2-e90af6fde9ba/requests",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  },
+  {
+    "name": "teacher_heatmap",
+    "method": "GET",
+    "path": "/api/v1/lms/stats/heatmap",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  },
+  {
+    "name": "teacher_kpis",
+    "method": "GET",
+    "path": "/api/v1/lms/stats/kpis",
+    "status": 200,
+    "ok": true,
+    "body": {
+      "concepts_monitored": 0,
+      "global_mastery_pct": 72.0,
+      "high_struggle_count": 0
+    },
+    "error": null
+  },
+  {
+    "name": "teacher_risk_flags",
+    "method": "GET",
+    "path": "/api/v1/lms/risk-flags",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  },
+  {
+    "name": "teacher_members",
+    "method": "GET",
+    "path": "/api/v1/lms/members",
+    "status": 200,
+    "ok": true,
+    "body": [
+      {
+        "id": "38f0f1b0-cae2-4a50-8a39-f2017097bcdd",
+        "name": "scholarA",
+        "email": "scholar@edu.com",
+        "role": "student",
+        "status": "active"
+      },
+      {
+        "id": "049cf9b0-fcad-4268-b8ad-d989bae737ce",
+        "name": "Audit Student",
+        "email": "audit_student@example.com",
+        "role": "student",
+        "status": "active"
+      },
+      {
+        "id": "2bcdaa41-ac55-431e-b462-58e40939b2c3",
+        "name": "Audit Teacher",
+        "email": "audit_teacher@teacher.edu",
+        "role": "teacher",
+        "status": "active"
+      }
+    ],
+    "error": null
+  },
+  {
+    "name": "teacher_assignments",
+    "method": "GET",
+    "path": "/api/v1/lms/assignments",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  },
+  {
+    "name": "teacher_reminders_post",
+    "method": "POST",
+    "path": "/api/v1/lms/reminders",
+    "status": 422,
+    "ok": false,
+    "body": {
+      "detail": [
+        {
+          "type": "missing",
+          "loc": [
+            "body",
+            "due_at"
+          ],
+          "msg": "Field required",
+          "input": {
+            "title": "Audit reminder",
+            "description": "Script created",
+            "due_date": "2026-05-01T10:00:00",
+            "course_id": 1
+          }
+        }
+      ]
+    },
+    "error": null
+  },
+  {
+    "name": "teacher_reminders_get",
+    "method": "GET",
+    "path": "/api/v1/lms/reminders",
+    "status": 200,
+    "ok": true,
+    "body": [],
+    "error": null
+  }
+]

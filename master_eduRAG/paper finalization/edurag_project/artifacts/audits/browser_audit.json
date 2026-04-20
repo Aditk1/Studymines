@@ -1,0 +1,18 @@
+[
+  {
+    "scenario": "student",
+    "url": "http://127.0.0.1:5173/study-lab",
+    "events": [
+      {
+        "type": "assertPath",
+        "expected": "/research",
+        "actual": "/research"
+      }
+    ]
+  },
+  {
+    "scenario": "teacher",
+    "url": "http://127.0.0.1:5173/profile",
+    "events": []
+  }
+]

@@ -12,6 +12,7 @@ This module:
 import os
 import sys
 import asyncio
+import uuid
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 from app.utils import get_logger
@@ -85,7 +86,7 @@ class RAGBridge:
             save_dir = str(PROJECT_ROOT / "data" / "graphs")
         os.makedirs(save_dir, exist_ok=True)
 
-        graph_filename = f"graph_{os.path.splitext(source_name)[0]}.pkl"
+        graph_filename = f"graph_{uuid.uuid4().hex}_{os.path.splitext(source_name)[0]}.pkl"
         save_path = os.path.join(save_dir, graph_filename)
 
         try:
@@ -134,7 +135,10 @@ class RAGBridge:
             "graph_status": "verified" if conf_ratio > 0.6 else "review_required",
             "communities_count": graph_stats.get("num_communities"),
             "graph_path": graph_stats.get("graph_path"),
+            "provider": self.pipeline.config.llm.provider if self.pipeline else None,
+            "reasoning_model": self.pipeline.config.llm.model if self.pipeline else None,
         }
+        study_package["status"] = "graph_grounded"
 
         label = "Verified" if conf_ratio > 0.5 else "Needs Review"
 

@@ -1,0 +1,4208 @@
+{
+  "counts": {
+    "py_functions": 372,
+    "py_classes": 122,
+    "js_symbols": 91
+  },
+  "files_total": 175,
+  "code_files": 106,
+  "files": [
+    {
+      "file": "app/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "app/bridge.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "RAGBridge",
+          "lineno": 39,
+          "purpose": "Bridges the gap between basic summarisation and graph-based reasoning.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 50,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "ingest_to_graph",
+              "lineno": 72,
+              "purpose": "Feed extracted text into the RLM-GraphRAG pipeline."
+            },
+            {
+              "type": "method",
+              "name": "enrich_study_package",
+              "lineno": 119,
+              "purpose": "Inject graph metadata and confidence labels into a Studymines"
+            },
+            {
+              "type": "method",
+              "name": "query_graph",
+              "lineno": 160,
+              "purpose": "Multi-hop question answering over the Knowledge Graph."
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "process_with_rag",
+          "lineno": 197,
+          "purpose": "One-call helper: ingest + enrich. Returns (package, stats)"
+        }
+      ]
+    },
+    {
+      "file": "app/chunking.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "DocumentChunker",
+          "lineno": 12,
+          "purpose": "Splits long documents into manageable chunks for LLM processing.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 15,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "estimate_tokens",
+              "lineno": 19,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "needs_chunking",
+              "lineno": 22,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "chunk_text",
+              "lineno": 25,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "needs_map_reduce",
+              "lineno": 47,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "MapReduceProcessor",
+          "lineno": 53,
+          "purpose": "Map-Reduce strategy for long-document study-package generation.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 56,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_generate_content",
+              "lineno": 59,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "map_chunk",
+              "lineno": 63,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "reduce_summaries",
+              "lineno": 77,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "process",
+              "lineno": 118,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "chunk_and_generate_eps",
+          "lineno": 128,
+          "purpose": "PHASE 1: Chunk text \u2192 generate initial Gemini-powered study package (FAST)."
+        },
+        {
+          "type": "function",
+          "name": "enrich_study_package_with_rag",
+          "lineno": 153,
+          "purpose": "PHASE 2: Ingest into GraphRAG (LLAMA) \u2192 Enrich Package \u2192 Notify (BACKGROUND)."
+        },
+        {
+          "type": "function",
+          "name": "chunk_and_process",
+          "lineno": 242,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "app/clients/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "app/clients/gemini_client.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "GeminiClient",
+          "lineno": 12,
+          "purpose": "Singleton-like Gemini client manager.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 18,
+              "purpose": "Initialize Gemini client with API key."
+            },
+            {
+              "type": "method",
+              "name": "get_client",
+              "lineno": 28,
+              "purpose": "Get or create Gemini client instance."
+            },
+            {
+              "type": "method",
+              "name": "get_model",
+              "lineno": 34,
+              "purpose": "Get a Gemini model instance."
+            },
+            {
+              "type": "method",
+              "name": "get_vision_model",
+              "lineno": 53,
+              "purpose": "Get a Gemini Vision model instance."
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "configure_gemini",
+          "lineno": 76,
+          "purpose": "Configure Gemini API with optional API key."
+        },
+        {
+          "type": "function",
+          "name": "get_model",
+          "lineno": 82,
+          "purpose": "Get a Gemini model instance."
+        },
+        {
+          "type": "function",
+          "name": "get_vision_model",
+          "lineno": 90,
+          "purpose": "Get a Gemini Vision model instance."
+        }
+      ]
+    },
+    {
+      "file": "app/clients/groq_client.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "GroqClient",
+          "lineno": 19,
+          "purpose": "Singleton-like Groq client manager.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 24,
+              "purpose": "Initialize Groq client with API key."
+            },
+            {
+              "type": "method",
+              "name": "_init_client",
+              "lineno": 32,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "get_client",
+              "lineno": 41,
+              "purpose": "Get or create Groq client singleton instance."
+            },
+            {
+              "type": "method",
+              "name": "generate_text",
+              "lineno": 47,
+              "purpose": "Generate a text response using Groq."
+            },
+            {
+              "type": "method",
+              "name": "generate_vision",
+              "lineno": 73,
+              "purpose": "Generate a response from an image using Groq Vision (Llama 3.2 Vision)."
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "configure_groq",
+          "lineno": 134,
+          "purpose": "Configure Groq client with optional API key."
+        },
+        {
+          "type": "function",
+          "name": "get_groq_client",
+          "lineno": 140,
+          "purpose": "Get the module-level Groq client, initializing if needed."
+        },
+        {
+          "type": "function",
+          "name": "groq_generate_text",
+          "lineno": 148,
+          "purpose": "Convenience function: generate text via Groq."
+        },
+        {
+          "type": "function",
+          "name": "groq_generate_vision",
+          "lineno": 153,
+          "purpose": "Convenience function: analyze image via Groq Vision."
+        }
+      ]
+    },
+    {
+      "file": "app/clients/ollama_client.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "OllamaClient",
+          "lineno": 14,
+          "purpose": "Synchronous client for Ollama API.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 17,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "generate",
+              "lineno": 21,
+              "purpose": "Produce a non-streaming response from Ollama."
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "ollama_generate",
+          "lineno": 46,
+          "purpose": "Convenience helper for Ollama generation."
+        }
+      ]
+    },
+    {
+      "file": "app/config.py",
+      "symbols": []
+    },
+    {
+      "file": "app/database.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "get_db",
+          "lineno": 20,
+          "purpose": "FastAPI dependency for DB session."
+        },
+        {
+          "type": "function",
+          "name": "init_db",
+          "lineno": 29,
+          "purpose": "Create all tables."
+        },
+        {
+          "type": "function",
+          "name": "drop_db",
+          "lineno": 43,
+          "purpose": "Drop all tables (testing only)."
+        }
+      ]
+    },
+    {
+      "file": "app/llm/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "app/llm/epf_generator.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "EPFGenerator",
+          "lineno": 14,
+          "purpose": "Generates educational outputs using the Educational Prompt Framework.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 17,
+              "purpose": "Initialize EPF generator with multi-LLM fallback (Gemini -> Groq -> Ollama)."
+            },
+            {
+              "type": "method",
+              "name": "_call_ollama",
+              "lineno": 43,
+              "purpose": "Call local Ollama reasoning pipeline."
+            },
+            {
+              "type": "method",
+              "name": "_generate_content",
+              "lineno": 47,
+              "purpose": "Centralized generation call (Gemini -> Groq -> Ollama)."
+            },
+            {
+              "type": "method",
+              "name": "generate_outputs",
+              "lineno": 67,
+              "purpose": "Generate all four educational outputs: summary, concepts, flashcards, questions."
+            },
+            {
+              "type": "method",
+              "name": "generate_summary",
+              "lineno": 158,
+              "purpose": "Generate only leveled summary."
+            },
+            {
+              "type": "method",
+              "name": "generate_flashcards",
+              "lineno": 184,
+              "purpose": "Generate flashcards for the content."
+            },
+            {
+              "type": "method",
+              "name": "generate_questions",
+              "lineno": 213,
+              "purpose": "Generate exam questions covering Bloom's taxonomy."
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "generate_study_package",
+          "lineno": 243,
+          "purpose": "Convenience function to generate complete study package."
+        }
+      ]
+    },
+    {
+      "file": "app/llm/utils.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "clean_json_response",
+          "lineno": 8,
+          "purpose": "Cleans LLM response text by removing markdown code blocks"
+        },
+        {
+          "type": "function",
+          "name": "retry_with_backoff",
+          "lineno": 43,
+          "purpose": "Decorator to retry a function on 429 (Quota Exceeded) or 500 (Internal Error) errors."
+        }
+      ]
+    },
+    {
+      "file": "app/lms/api/analytics.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "get_teacher_insight",
+          "lineno": 14,
+          "purpose": "Teacher's Insight (Heatmap):"
+        },
+        {
+          "type": "function",
+          "name": "cross_classroom_search",
+          "lineno": 68,
+          "purpose": "Cross-Classroom Search:"
+        }
+      ]
+    },
+    {
+      "file": "app/lms/api/lms_routes.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "get_explore_classrooms",
+          "lineno": 30,
+          "purpose": "List all available classrooms/cohorts."
+        },
+        {
+          "type": "function",
+          "name": "get_course_architecture_consolidated",
+          "lineno": 37,
+          "purpose": "Retrieve full course sections and modules hierarchy with access control."
+        },
+        {
+          "type": "function",
+          "name": "get_chat_history",
+          "lineno": 69,
+          "purpose": "Retrieve chat history for a room."
+        },
+        {
+          "type": "class",
+          "name": "ClassroomBase",
+          "lineno": 91,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "ClassroomCreate",
+          "lineno": 96,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "ClassroomResponse",
+          "lineno": 99,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "function",
+          "name": "create_classroom",
+          "lineno": 113,
+          "purpose": "Create a new classroom and auto-add the creator."
+        },
+        {
+          "type": "function",
+          "name": "list_classrooms",
+          "lineno": 150,
+          "purpose": "List classrooms the user is a member of."
+        },
+        {
+          "type": "class",
+          "name": "JoinRequest",
+          "lineno": 166,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "function",
+          "name": "join_classroom",
+          "lineno": 170,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "get_classroom_requests",
+          "lineno": 198,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "get_global_materials",
+          "lineno": 224,
+          "purpose": "Retrieve all ingested materials for the Global Content view."
+        },
+        {
+          "type": "function",
+          "name": "approve_join_request",
+          "lineno": 251,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "get_classroom",
+          "lineno": 273,
+          "purpose": "Get classroom details."
+        },
+        {
+          "type": "function",
+          "name": "upload_material",
+          "lineno": 311,
+          "purpose": "Upload material to a classroom, process through RAG, and save."
+        },
+        {
+          "type": "function",
+          "name": "list_materials",
+          "lineno": 382,
+          "purpose": "List materials in a classroom."
+        },
+        {
+          "type": "class",
+          "name": "CourseCreate",
+          "lineno": 405,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "function",
+          "name": "create_new_course",
+          "lineno": 411,
+          "purpose": "Create a high-level course in the new AI LMS structure."
+        },
+        {
+          "type": "function",
+          "name": "list_courses_consolidated",
+          "lineno": 430,
+          "purpose": "List courses based on user role: Teachers see owned, students see published."
+        },
+        {
+          "type": "class",
+          "name": "SectionCreate",
+          "lineno": 445,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "function",
+          "name": "create_section",
+          "lineno": 451,
+          "purpose": "Architect a new section within a course."
+        },
+        {
+          "type": "class",
+          "name": "ModuleCreate",
+          "lineno": 469,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "function",
+          "name": "create_module",
+          "lineno": 475,
+          "purpose": "Add a learning module to a section."
+        },
+        {
+          "type": "class",
+          "name": "EventCreate",
+          "lineno": 497,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "function",
+          "name": "log_event",
+          "lineno": 503,
+          "purpose": "Log an analytics event (click, view, session tracking)."
+        },
+        {
+          "type": "function",
+          "name": "get_mastery_graph_data",
+          "lineno": 523,
+          "purpose": "Get summarized mastery data for the interactive graph visualizer."
+        },
+        {
+          "type": "function",
+          "name": "get_risk_report",
+          "lineno": 589,
+          "purpose": "Retrieve students at risk for a specific course or across all classrooms."
+        },
+        {
+          "type": "function",
+          "name": "get_reminders",
+          "lineno": 620,
+          "purpose": "Retrieve all pending reminders and milestones for the user."
+        },
+        {
+          "type": "class",
+          "name": "ReminderCreate",
+          "lineno": 649,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "function",
+          "name": "create_reminder",
+          "lineno": 656,
+          "purpose": "Manually add a reminder to the chronos."
+        },
+        {
+          "type": "function",
+          "name": "auto_generate_quiz_from_text",
+          "lineno": 675,
+          "purpose": "Uses NLP to extract questions from an existing LMSMaterial and populate QuestionBank."
+        },
+        {
+          "type": "class",
+          "name": "UniversalExamCreate",
+          "lineno": 706,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "function",
+          "name": "background_generate_exam",
+          "lineno": 715,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "generate_universal_exam",
+          "lineno": 761,
+          "purpose": "Universal generation endpoint for Exams and Quizzes using CognitiveAIGenerator."
+        },
+        {
+          "type": "class",
+          "name": "AssessmentSubmission",
+          "lineno": 791,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "function",
+          "name": "submit_assessment",
+          "lineno": 796,
+          "purpose": "Submit a native LMS assessment, calculate score, and update mastery."
+        },
+        {
+          "type": "function",
+          "name": "list_classroom_exams",
+          "lineno": 842,
+          "purpose": "List all exams/assessments for a classroom."
+        },
+        {
+          "type": "function",
+          "name": "get_assessment_details",
+          "lineno": 858,
+          "purpose": "Retrieve full details for an assessment including all question content."
+        },
+        {
+          "type": "function",
+          "name": "get_all_members",
+          "lineno": 889,
+          "purpose": "Fetch all users in the tenant for the management view."
+        },
+        {
+          "type": "function",
+          "name": "update_member_status",
+          "lineno": 904,
+          "purpose": "Change user status (active/banned/etc)."
+        },
+        {
+          "type": "function",
+          "name": "update_member_role",
+          "lineno": 919,
+          "purpose": "Update a user's role (student/teacher/admin)."
+        },
+        {
+          "type": "function",
+          "name": "delete_member",
+          "lineno": 934,
+          "purpose": "Permanently delete a user (caution)."
+        },
+        {
+          "type": "function",
+          "name": "get_all_assignments",
+          "lineno": 960,
+          "purpose": "Fetch all assessments assigned across the user's courses."
+        },
+        {
+          "type": "function",
+          "name": "get_cognitive_heatmap",
+          "lineno": 979,
+          "purpose": "Aggregate mastery data by concept to show high-struggle areas."
+        },
+        {
+          "type": "function",
+          "name": "get_analytics_kpis",
+          "lineno": 998,
+          "purpose": "Core metrics for the analytics dashboard."
+        },
+        {
+          "type": "function",
+          "name": "get_recommended_learning_paths",
+          "lineno": 1011,
+          "purpose": "Dynamically calculates the recommended next modules/concepts based on KG mastery topology."
+        },
+        {
+          "type": "function",
+          "name": "get_global_chats",
+          "lineno": 1070,
+          "purpose": "Retrieve all active classroom chat rooms user is part of."
+        },
+        {
+          "type": "function",
+          "name": "create_course",
+          "lineno": 1094,
+          "purpose": "Create a new course shell."
+        },
+        {
+          "type": "function",
+          "name": "add_course_section",
+          "lineno": 1107,
+          "purpose": "Add a new section to a course."
+        },
+        {
+          "type": "function",
+          "name": "publish_course_architecture",
+          "lineno": 1121,
+          "purpose": "Marks a course architecture as published, making it visible to students."
+        },
+        {
+          "type": "class",
+          "name": "AIArchitectRequest",
+          "lineno": 1135,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "function",
+          "name": "ai_architect_course",
+          "lineno": 1139,
+          "purpose": "RAG-driven curriculum synthesis."
+        }
+      ]
+    },
+    {
+      "file": "app/lms/auth.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "verify_password",
+          "lineno": 21,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "get_password_hash",
+          "lineno": 24,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "detect_role_from_email",
+          "lineno": 30,
+          "purpose": "Auto-detect student or teacher based on domain or keywords."
+        },
+        {
+          "type": "function",
+          "name": "create_access_token",
+          "lineno": 37,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "get_current_user",
+          "lineno": 47,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "get_current_user_optional",
+          "lineno": 64,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "require_role",
+          "lineno": 77,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "app/lms/chat_socket.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "ConnectionManager",
+          "lineno": 11,
+          "purpose": "",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 12,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "connect",
+              "lineno": 16,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "disconnect",
+              "lineno": 22,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "broadcast",
+              "lineno": 28,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "websocket_endpoint",
+          "lineno": 51,
+          "purpose": "WebSocket endpoint for real-time chat."
+        }
+      ]
+    },
+    {
+      "file": "app/lms/core/ai_generator.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "CognitiveAIGenerator",
+          "lineno": 14,
+          "purpose": "Universal AI generator for Quizzes, Exams, and Lesson Plans."
+        }
+      ]
+    },
+    {
+      "file": "app/lms/models/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "app/lms/models/chat.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "ChatRoom",
+          "lineno": 8,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "ChatMessage",
+          "lineno": 28,
+          "purpose": "",
+          "methods": []
+        }
+      ]
+    },
+    {
+      "file": "app/lms/models/classroom.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "Classroom",
+          "lineno": 9,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "ClassroomMember",
+          "lineno": 34,
+          "purpose": "",
+          "methods": []
+        }
+      ]
+    },
+    {
+      "file": "app/lms/models/exam.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "Exam",
+          "lineno": 8,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "ExamClassroom",
+          "lineno": 26,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "ExamSubmission",
+          "lineno": 39,
+          "purpose": "",
+          "methods": []
+        }
+      ]
+    },
+    {
+      "file": "app/lms/models/material.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "LMSMaterial",
+          "lineno": 8,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "DocumentChunk",
+          "lineno": 44,
+          "purpose": "",
+          "methods": []
+        }
+      ]
+    },
+    {
+      "file": "app/lms/risk_engine.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "RiskEngine",
+          "lineno": 11,
+          "purpose": "Analyzes student data to predict academic failure or disengagement.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 16,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "analyze_student",
+              "lineno": 19,
+              "purpose": "Calculates a Risk Score (0-100) for a student in a specific course."
+            },
+            {
+              "type": "method",
+              "name": "_calculate_engagement",
+              "lineno": 67,
+              "purpose": "Engagement based on event frequency in the last 7 days."
+            },
+            {
+              "type": "method",
+              "name": "_calculate_mastery",
+              "lineno": 79,
+              "purpose": "Mastery based on historical MasteryLogs."
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "update_mastery_from_quiz",
+          "lineno": 88,
+          "purpose": "Bridge function to record mastery after a quiz attempt."
+        }
+      ]
+    },
+    {
+      "file": "app/main.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "startup_event",
+          "lineno": 59,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "_stage_one_artifact",
+          "lineno": 84,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "_derive_upload_processing_status",
+          "lineno": 90,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "_parse_study_package_payload",
+          "lineno": 104,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "_build_stage_one_context",
+          "lineno": 133,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "_answer_from_study_package",
+          "lineno": 168,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "root",
+          "lineno": 213,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "signup",
+          "lineno": 241,
+          "purpose": "Register a new user account."
+        },
+        {
+          "type": "function",
+          "name": "login",
+          "lineno": 279,
+          "purpose": "Authenticate user and issue access token."
+        },
+        {
+          "type": "function",
+          "name": "create_user",
+          "lineno": 310,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "get_or_create_guest",
+          "lineno": 322,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "upload_document",
+          "lineno": 337,
+          "purpose": "Process document uploads (PDF, DOCX, etc.)."
+        },
+        {
+          "type": "function",
+          "name": "upload_image",
+          "lineno": 434,
+          "purpose": "Upload and process an image (JPG, PNG, etc.)."
+        },
+        {
+          "type": "function",
+          "name": "analyze_artifact",
+          "lineno": 565,
+          "purpose": "Triggers the detailed AI analysis and GraphRAG compilation for an Archived item."
+        },
+        {
+          "type": "function",
+          "name": "delete_artifact",
+          "lineno": 624,
+          "purpose": "Delete an artifact from StudyMines."
+        },
+        {
+          "type": "function",
+          "name": "health_check",
+          "lineno": 635,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "get_all_uploads",
+          "lineno": 644,
+          "purpose": "Fetch all document uploads for the current user."
+        },
+        {
+          "type": "function",
+          "name": "graph_query",
+          "lineno": 662,
+          "purpose": "Multi-hop question answering over the Knowledge Graph."
+        },
+        {
+          "type": "function",
+          "name": "graph_chat",
+          "lineno": 719,
+          "purpose": "Graph-grounded chatbot interface."
+        },
+        {
+          "type": "function",
+          "name": "graph_view",
+          "lineno": 742,
+          "purpose": "Return graph metadata for a specific upload."
+        },
+        {
+          "type": "function",
+          "name": "graph_entities",
+          "lineno": 760,
+          "purpose": "List entities extracted for a specific upload."
+        },
+        {
+          "type": "function",
+          "name": "get_user_dashboard",
+          "lineno": 781,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "get_user_profile",
+          "lineno": 811,
+          "purpose": "Fetch profile data for a specific user ID."
+        },
+        {
+          "type": "function",
+          "name": "get_ecosystem_stats",
+          "lineno": 846,
+          "purpose": "Global aggregate stats for the sidebar."
+        },
+        {
+          "type": "function",
+          "name": "get_leaderboard",
+          "lineno": 864,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "get_upload_file",
+          "lineno": 884,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "get_upload",
+          "lineno": 892,
+          "purpose": "Unified API for fetching both Studymines Uploads and Classroom LMSMaterials."
+        },
+        {
+          "type": "function",
+          "name": "record_performance",
+          "lineno": 959,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "research_metrics",
+          "lineno": 1000,
+          "purpose": "Research metrics sourced from live artifacts or exported evaluation files."
+        }
+      ]
+    },
+    {
+      "file": "app/migrate.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "migrate",
+          "lineno": 10,
+          "purpose": "Manual schema migration for Assessments and Course/Classroom links."
+        }
+      ]
+    },
+    {
+      "file": "app/models.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "User",
+          "lineno": 18,
+          "purpose": "Mapped to exact Supabase StudyPoint users table.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__repr__",
+              "lineno": 54,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "Upload",
+          "lineno": 58,
+          "purpose": "Document / image upload record.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__repr__",
+              "lineno": 80,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "Performance",
+          "lineno": 84,
+          "purpose": "Quiz scores and feedback.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__repr__",
+              "lineno": 98,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "Usage",
+          "lineno": 102,
+          "purpose": "Session tracking and API call counts.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__repr__",
+              "lineno": 114,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "GraphEntity",
+          "lineno": 119,
+          "purpose": "Tracks Knowledge Graph entities extracted via RLM-GraphRAG.",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "Course",
+          "lineno": 144,
+          "purpose": "Top-level container for educational content.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__repr__",
+              "lineno": 161,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "Assessment",
+          "lineno": 165,
+          "purpose": "LMS Assessment / Exam.",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "Section",
+          "lineno": 191,
+          "purpose": "Logical grouping of modules within a course.",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "LessonModule",
+          "lineno": 205,
+          "purpose": "Individual learning unit (Video, Document, Quiz).",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "Enrollment",
+          "lineno": 224,
+          "purpose": "Student enrollment record with progress tracking.",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "QuestionBank",
+          "lineno": 243,
+          "purpose": "Reusable questions linked to Knowledge Graph entities.",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "AssessmentAttempt",
+          "lineno": 263,
+          "purpose": "Student performance on an assessment.",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "AcademicRisk",
+          "lineno": 280,
+          "purpose": "Tracks students at risk using GraphRAG mastery + engagement data.",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "EventLog",
+          "lineno": 298,
+          "purpose": "Raw analytics events for student behavior tracking.",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "MasteryLog",
+          "lineno": 310,
+          "purpose": "Historical tracking of concept mastery over time (GraphRAG integration).",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "LMSReminder",
+          "lineno": 320,
+          "purpose": "Personalized reminders or scheduled tasks for students/teachers.",
+          "methods": []
+        }
+      ]
+    },
+    {
+      "file": "app/parsers/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "app/parsers/document_parser.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "DocumentParser",
+          "lineno": 13,
+          "purpose": "Abstract base class for document parsers.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "extract_text",
+              "lineno": 17,
+              "purpose": "Extract text from document."
+            },
+            {
+              "type": "method",
+              "name": "extract_metadata",
+              "lineno": 22,
+              "purpose": "Extract metadata (structure, headings, etc.)."
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "PDFParser",
+          "lineno": 27,
+          "purpose": "Parser for PDF files using PyMuPDF.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "extract_text",
+              "lineno": 30,
+              "purpose": "Extract text from PDF while preserving reading order."
+            },
+            {
+              "type": "method",
+              "name": "extract_metadata",
+              "lineno": 53,
+              "purpose": "Extract PDF metadata and structure."
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "PPTXParser",
+          "lineno": 74,
+          "purpose": "Parser for PowerPoint files.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "extract_text",
+              "lineno": 77,
+              "purpose": "Extract text from PPTX slides and speaker notes."
+            },
+            {
+              "type": "method",
+              "name": "extract_metadata",
+              "lineno": 107,
+              "purpose": "Extract PPTX metadata."
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "DOCXParser",
+          "lineno": 124,
+          "purpose": "Parser for Word documents.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "extract_text",
+              "lineno": 127,
+              "purpose": "Extract text from DOCX while preserving structure."
+            },
+            {
+              "type": "method",
+              "name": "extract_metadata",
+              "lineno": 153,
+              "purpose": "Extract DOCX metadata."
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "TXTParser",
+          "lineno": 170,
+          "purpose": "Parser for plain text files.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "extract_text",
+              "lineno": 173,
+              "purpose": "Extract text from TXT file."
+            },
+            {
+              "type": "method",
+              "name": "extract_metadata",
+              "lineno": 189,
+              "purpose": "Extract TXT metadata."
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "detect_file_type",
+          "lineno": 204,
+          "purpose": "Detect file type using multiple strategies (not just extension)."
+        },
+        {
+          "type": "class",
+          "name": "DocumentParserFactory",
+          "lineno": 264,
+          "purpose": "Factory for selecting the right parser based on file type.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "get_parser",
+              "lineno": 275,
+              "purpose": "Get appropriate parser for file type."
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "parse_document",
+          "lineno": 295,
+          "purpose": "Convenience function to parse any supported document."
+        }
+      ]
+    },
+    {
+      "file": "app/preprocessing.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "TextPreprocessor",
+          "lineno": 10,
+          "purpose": "Preprocesses extracted text for quality and consistency.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "clean_whitespace",
+              "lineno": 13,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "fix_encoding",
+              "lineno": 18,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "normalize_bullets",
+              "lineno": 25,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "remove_page_artifacts",
+              "lineno": 30,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "normalize_quotes",
+              "lineno": 35,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "preserve_structure",
+              "lineno": 40,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "preprocess",
+              "lineno": 45,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "preprocess_text",
+          "lineno": 55,
+          "purpose": "Convenience function."
+        }
+      ]
+    },
+    {
+      "file": "app/research_metrics.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "GraphArtifactMetrics",
+          "lineno": 26,
+          "purpose": "",
+          "methods": [
+            {
+              "type": "method",
+              "name": "to_dict",
+              "lineno": 35,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "_round",
+          "lineno": 47,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "_safe_mean",
+          "lineno": 53,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "_load_graph_artifact",
+          "lineno": 57,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "_compute_community_coherence",
+          "lineno": 81,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "_compute_graph_metrics",
+          "lineno": 107,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "_scan_graph_metrics",
+          "lineno": 135,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "_load_db_snapshot",
+          "lineno": 152,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "_load_live_config",
+          "lineno": 185,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "_build_snapshot_metrics",
+          "lineno": 202,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "get_research_metrics",
+          "lineno": 240,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "write_research_snapshot",
+          "lineno": 247,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "app/segregation.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "ContentSegregator",
+          "lineno": 15,
+          "purpose": "",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 16,
+              "purpose": "Initialize ContentSegregator with Gemini primary and Groq fallback."
+            },
+            {
+              "type": "method",
+              "name": "manual_segregate",
+              "lineno": 28,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "auto_segregate",
+              "lineno": 31,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "segregate",
+              "lineno": 71,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "segregate_content",
+          "lineno": 77,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "app/utils/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "app/utils/config_loader.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "get_project_root",
+          "lineno": 10,
+          "purpose": "Get the project root directory."
+        },
+        {
+          "type": "function",
+          "name": "get_config_path",
+          "lineno": 33,
+          "purpose": "Get the path to a config file."
+        },
+        {
+          "type": "function",
+          "name": "load_config",
+          "lineno": 48,
+          "purpose": "Load YAML configuration file."
+        }
+      ]
+    },
+    {
+      "file": "app/utils/logger.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "setup_logger",
+          "lineno": 12,
+          "purpose": "Set up a structured logger with consistent formatting."
+        },
+        {
+          "type": "function",
+          "name": "get_logger",
+          "lineno": 62,
+          "purpose": "Get or create a logger with the given name."
+        }
+      ]
+    },
+    {
+      "file": "app/vision/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "app/vision/image_preprocessor.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "ImagePreprocessor",
+          "lineno": 12,
+          "purpose": "Preprocesses images for vision extraction.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "validate_image",
+              "lineno": 16,
+              "purpose": "Validate if file is a valid image."
+            },
+            {
+              "type": "method",
+              "name": "correct_orientation",
+              "lineno": 31,
+              "purpose": "Correct image orientation using EXIF metadata."
+            },
+            {
+              "type": "method",
+              "name": "resize_image",
+              "lineno": 60,
+              "purpose": "Resize image to max size while preserving aspect ratio."
+            },
+            {
+              "type": "method",
+              "name": "enhance_contrast",
+              "lineno": 80,
+              "purpose": "Enhance image contrast for better visibility (especially for low-contrast scans)."
+            },
+            {
+              "type": "method",
+              "name": "preprocess",
+              "lineno": 103,
+              "purpose": "Apply all preprocessing steps."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "app/vision/vision_extractor.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "VisionExtractor",
+          "lineno": 13,
+          "purpose": "Extracts text and context from images using Gemini Vision API.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 16,
+              "purpose": "Initialize vision extractor with Gemini API."
+            },
+            {
+              "type": "method",
+              "name": "_generate_content",
+              "lineno": 33,
+              "purpose": "Centralized vision call (Gemini -> Groq)."
+            },
+            {
+              "type": "method",
+              "name": "extract_from_image",
+              "lineno": 55,
+              "purpose": "Extract text and context from image using Gemini Vision with Groq fallback."
+            },
+            {
+              "type": "method",
+              "name": "_read_image_as_base64",
+              "lineno": 109,
+              "purpose": "Read image and encode as base64 for API."
+            },
+            {
+              "type": "method",
+              "name": "extract_questions",
+              "lineno": 122,
+              "purpose": "Extract and segment questions from a question paper image."
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "extract_from_image",
+          "lineno": 170,
+          "purpose": "Convenience function for vision extraction."
+        }
+      ]
+    },
+    {
+      "file": "frontend/postcss.config.js",
+      "symbols": []
+    },
+    {
+      "file": "frontend/src/App.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "App",
+          "lineno": 38,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchStats",
+          "lineno": 74,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleLogin",
+          "lineno": 87,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleLogout",
+          "lineno": 96,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "openArtifact",
+          "lineno": 130,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "openAssessment",
+          "lineno": 135,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/Analytics.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "Analytics",
+          "lineno": 8,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchData",
+          "lineno": 18,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/AssessmentView.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "AssessmentView",
+          "lineno": 17,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchDetails",
+          "lineno": 31,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleAnswer",
+          "lineno": 44,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleSubmit",
+          "lineno": 48,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/Assignments.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "Assignments",
+          "lineno": 7,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchAssignments",
+          "lineno": 30,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchClassrooms",
+          "lineno": 41,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleGenerateExam",
+          "lineno": 50,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/Auth.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "Auth",
+          "lineno": 16,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleSubmit",
+          "lineno": 28,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/Chatbot.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "Chatbot",
+          "lineno": 7,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "scrollToBottom",
+          "lineno": 17,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleSend",
+          "lineno": 25,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/ClassroomDetail.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "ClassroomDetail",
+          "lineno": 11,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchBaseData",
+          "lineno": 29,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchExams",
+          "lineno": 51,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchRequests",
+          "lineno": 60,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleGenerateExam",
+          "lineno": 69,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleApprove",
+          "lineno": 91,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleFileUpload",
+          "lineno": 101,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "sendChatMessage",
+          "lineno": 147,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/Classrooms.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "ChevronRight",
+          "lineno": 7,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "Classrooms",
+          "lineno": 11,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchClassrooms",
+          "lineno": 20,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/Content.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "Content",
+          "lineno": 11,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleAnalyze",
+          "lineno": 19,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleDelete",
+          "lineno": 33,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchMaterials",
+          "lineno": 46,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/Dashboard.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "Dashboard",
+          "lineno": 20,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "confirmDelete",
+          "lineno": 28,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchUserData",
+          "lineno": 45,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/GlobalChat.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "GlobalChat",
+          "lineno": 6,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchChats",
+          "lineno": 11,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/GlobalContent.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "GlobalContent",
+          "lineno": 10,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchMaterials",
+          "lineno": 17,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/Header.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "Header",
+          "lineno": 1,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/KnowledgeMap.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "buildLinks",
+          "lineno": 9,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "buildEntityGraph",
+          "lineno": 26,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "buildConceptFallback",
+          "lineno": 40,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "normalizeText",
+          "lineno": 54,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "getLinkNodeId",
+          "lineno": 61,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "truncateText",
+          "lineno": 69,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "findRelevantSummary",
+          "lineno": 82,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "buildNodeExplainer",
+          "lineno": 100,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "KnowledgeMap",
+          "lineno": 145,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "refreshGraph",
+          "lineno": 160,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "getMasteryColor",
+          "lineno": 271,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleNodeClick",
+          "lineno": 277,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "LearningPathList",
+          "lineno": 485,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/Leaderboard.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "Leaderboard",
+          "lineno": 12,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchLeaderboard",
+          "lineno": 18,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/Members.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "Members",
+          "lineno": 7,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "notify",
+          "lineno": 15,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchMembers",
+          "lineno": 20,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleStatusChange",
+          "lineno": 36,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleRoleChange",
+          "lineno": 49,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleViewMastery",
+          "lineno": 72,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleDelete",
+          "lineno": 77,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/Navigation.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "Navigation",
+          "lineno": 1,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/Profile.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "Profile",
+          "lineno": 17,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchUserStats",
+          "lineno": 22,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "ChevronRight",
+          "lineno": 179,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/Research.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "Research",
+          "lineno": 16,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchMetrics",
+          "lineno": 21,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "formatMetric",
+          "lineno": 55,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "MetricCard",
+          "lineno": 59,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/Scheduler.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "Scheduler",
+          "lineno": 16,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchReminders",
+          "lineno": 39,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleAddEvent",
+          "lineno": 50,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleMarkComplete",
+          "lineno": 61,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleOptimizeCycle",
+          "lineno": 70,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/StudyLab.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "StudyLab",
+          "lineno": 20,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchData",
+          "lineno": 32,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleQuizAnswer",
+          "lineno": 74,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/TeacherStudio.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "TeacherStudio",
+          "lineno": 17,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "fetchCourses",
+          "lineno": 28,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleCreateCourse",
+          "lineno": 45,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleAIArchitect",
+          "lineno": 62,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handlePublish",
+          "lineno": 75,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "generateQuiz",
+          "lineno": 87,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/components/Upload.jsx",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "Upload",
+          "lineno": 18,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleFileChange",
+          "lineno": 29,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "handleSubmit",
+          "lineno": 37,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "frontend/src/main.jsx",
+      "symbols": []
+    },
+    {
+      "file": "frontend/src/supabase.js",
+      "symbols": []
+    },
+    {
+      "file": "frontend/tailwind.config.js",
+      "symbols": []
+    },
+    {
+      "file": "frontend/vite.config.js",
+      "symbols": []
+    },
+    {
+      "file": "scripts/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "scripts/db_stats.py",
+      "symbols": []
+    },
+    {
+      "file": "scripts/db_stats_master.py",
+      "symbols": []
+    },
+    {
+      "file": "scripts/generate_research_plots.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "plot_full_graph",
+          "lineno": 23,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "plot_communities",
+          "lineno": 58,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "plot_performance",
+          "lineno": 107,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "scripts/init_postgres_db.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "main",
+          "lineno": 9,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "scripts/list_gemini_models.py",
+      "symbols": []
+    },
+    {
+      "file": "scripts/migrate_db.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "migrate",
+          "lineno": 10,
+          "purpose": "Production-grade migration script."
+        }
+      ]
+    },
+    {
+      "file": "scripts/run_pdf_test.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "run_test",
+          "lineno": 16,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "scripts/test_load_graph.py",
+      "symbols": []
+    },
+    {
+      "file": "scripts/test_model_names.py",
+      "symbols": []
+    },
+    {
+      "file": "src/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "src/community/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "src/community/base.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "CommunityDetector",
+          "lineno": 13,
+          "purpose": "Abstract community detector.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "detect",
+              "lineno": 22,
+              "purpose": "Assign community IDs to nodes."
+            },
+            {
+              "type": "method",
+              "name": "get_name",
+              "lineno": 36,
+              "purpose": "Return short identifier used in experiment logs and reports."
+            },
+            {
+              "type": "method",
+              "name": "apply",
+              "lineno": 40,
+              "purpose": "Run detection and apply results to the graph."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/community/detectors.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "LeidenDetector",
+          "lineno": 29,
+          "purpose": "Standard Leiden algorithm using structural modularity.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 35,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "get_name",
+              "lineno": 38,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "detect",
+              "lineno": 41,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_fallback_connected_components",
+              "lineno": 76,
+              "purpose": "Fallback: use connected components as communities."
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "CWLeidenDetector",
+          "lineno": 93,
+          "purpose": "Contribution 2a: Confidence-Weighted Leiden.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 103,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "get_name",
+              "lineno": 106,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "detect",
+              "lineno": 109,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "RLMCommunityDetector",
+          "lineno": 188,
+          "purpose": "Contribution 2b: RLM-Guided Semantic Community Detection.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 201,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "get_name",
+              "lineno": 205,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "detect",
+              "lineno": 208,
+              "purpose": "Run LLM-based community detection synchronously."
+            },
+            {
+              "type": "method",
+              "name": "_detect_async",
+              "lineno": 212,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_build_neighborhood_description",
+              "lineno": 243,
+              "purpose": "Build a text description of each entity's neighborhood."
+            },
+            {
+              "type": "method",
+              "name": "_parse_community_response",
+              "lineno": 257,
+              "purpose": "Parse LLM community assignment response."
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "build_community_detector",
+          "lineno": 287,
+          "purpose": "Factory function: instantiate the correct detector from config."
+        }
+      ]
+    },
+    {
+      "file": "src/evaluation/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "src/evaluation/metrics.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "normalize_answer",
+          "lineno": 19,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "exact_match",
+          "lineno": 26,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "token_f1",
+          "lineno": 30,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "rouge_l",
+          "lineno": 44,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "_lcs_length",
+          "lineno": 57,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "evaluate_answer",
+          "lineno": 69,
+          "purpose": ""
+        },
+        {
+          "type": "class",
+          "name": "QueryResult",
+          "lineno": 78,
+          "purpose": "",
+          "methods": [
+            {
+              "type": "method",
+              "name": "to_dict",
+              "lineno": 97,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "aggregate_results",
+          "lineno": 119,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "compute_community_coherence",
+          "lineno": 141,
+          "purpose": "Mean pairwise cosine similarity within each community."
+        },
+        {
+          "type": "function",
+          "name": "compute_weighted_modularity",
+          "lineno": 170,
+          "purpose": ""
+        },
+        {
+          "type": "class",
+          "name": "GraphQualityReport",
+          "lineno": 194,
+          "purpose": "",
+          "methods": [
+            {
+              "type": "method",
+              "name": "to_dict",
+              "lineno": 203,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "evaluate_graph_quality",
+          "lineno": 215,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "src/graph/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "src/graph/knowledge_graph.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "Triple",
+          "lineno": 23,
+          "purpose": "A single extracted knowledge triple.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "to_text",
+              "lineno": 32,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "NodeData",
+          "lineno": 37,
+          "purpose": "Data stored on each graph node.",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "KnowledgeGraph",
+          "lineno": 46,
+          "purpose": "Confidence-weighted, community-annotated Knowledge Graph.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 60,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "add_triple",
+              "lineno": 68,
+              "purpose": "Add a triple to the graph. Creates nodes if they don't exist."
+            },
+            {
+              "type": "method",
+              "name": "add_triples",
+              "lineno": 98,
+              "purpose": "Batch add triples."
+            },
+            {
+              "type": "method",
+              "name": "set_node_embedding",
+              "lineno": 104,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "set_community",
+              "lineno": 109,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "get_neighbors",
+              "lineno": 118,
+              "purpose": "Return neighbors of an entity, optionally filtered by confidence."
+            },
+            {
+              "type": "method",
+              "name": "get_path",
+              "lineno": 164,
+              "purpose": "Find shortest path between two entities."
+            },
+            {
+              "type": "method",
+              "name": "get_community",
+              "lineno": 197,
+              "purpose": "Return the community ID of an entity, or -1 if unassigned."
+            },
+            {
+              "type": "method",
+              "name": "get_community_members",
+              "lineno": 204,
+              "purpose": "Return all entities in a given community."
+            },
+            {
+              "type": "method",
+              "name": "get_subgraph",
+              "lineno": 211,
+              "purpose": "Extract a subgraph centered on given entities up to `depth` hops."
+            },
+            {
+              "type": "method",
+              "name": "get_high_confidence_triples",
+              "lineno": 255,
+              "purpose": "Return all triples above a confidence threshold."
+            },
+            {
+              "type": "method",
+              "name": "entity_exists",
+              "lineno": 267,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "get_all_entities",
+              "lineno": 270,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "get_all_communities",
+              "lineno": 273,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "save",
+              "lineno": 280,
+              "purpose": "Save graph to disk using JSON."
+            },
+            {
+              "type": "method",
+              "name": "load",
+              "lineno": 291,
+              "purpose": "Load graph from disk using JSON."
+            },
+            {
+              "type": "method",
+              "name": "to_networkx",
+              "lineno": 303,
+              "purpose": "Return raw NetworkX graph (for community algorithms)."
+            },
+            {
+              "type": "method",
+              "name": "_update_stats",
+              "lineno": 311,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "summary",
+              "lineno": 324,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "__repr__",
+              "lineno": 328,
+              "purpose": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/ingestion/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "src/ingestion/confidence.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "ConfidenceResult",
+          "lineno": 89,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "ConfidenceScorer",
+          "lineno": 98,
+          "purpose": "Hybrid confidence scorer with three configurable modes.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 112,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_composite",
+              "lineno": 121,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_rule_score",
+              "lineno": 127,
+              "purpose": "Fast rule-based scoring. No LLM calls."
+            },
+            {
+              "type": "method",
+              "name": "_llm_score_batch",
+              "lineno": 180,
+              "purpose": "Score a batch of triples in one LLM call."
+            },
+            {
+              "type": "method",
+              "name": "_parse_batch",
+              "lineno": 209,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "score_batch",
+              "lineno": 248,
+              "purpose": "Score triples according to the configured mode."
+            },
+            {
+              "type": "method",
+              "name": "score_batch_sync",
+              "lineno": 371,
+              "purpose": "Synchronous wrapper."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/ingestion/extractor.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "LLMExtractor",
+          "lineno": 59,
+          "purpose": "LLM-based triple extraction.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 66,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_get_llm",
+              "lineno": 71,
+              "purpose": "Lazy-load LLM client."
+            },
+            {
+              "type": "method",
+              "name": "extract_from_text",
+              "lineno": 79,
+              "purpose": "Extract triples from text using LLM."
+            },
+            {
+              "type": "method",
+              "name": "_parse_triples",
+              "lineno": 94,
+              "purpose": "Parse JSON array of triples from LLM response."
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "REBELExtractor",
+          "lineno": 119,
+          "purpose": "REBEL-based relation extraction.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 126,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_resolve_device",
+              "lineno": 133,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_load",
+              "lineno": 142,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "extract_from_text",
+              "lineno": 155,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_parse_rebel_output",
+              "lineno": 177,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "SpaCyExtractor",
+          "lineno": 197,
+          "purpose": "spaCy dependency parsing fallback.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 200,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_load",
+              "lineno": 204,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "extract_from_text",
+              "lineno": 216,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "TripleExtractor",
+          "lineno": 231,
+          "purpose": "Unified extractor. Selects backend based on config.ingestion.extractor.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 240,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "extract_from_chunk",
+              "lineno": 259,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "extract_from_chunks",
+              "lineno": 295,
+              "purpose": "Parallel extraction using asyncio.gather for speed."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/ingestion/graph_builder.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "GraphBuilder",
+          "lineno": 14,
+          "purpose": "Builds a KnowledgeGraph from triples and populates embeddings.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 22,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "build",
+              "lineno": 30,
+              "purpose": "Construct a KnowledgeGraph from a list of triples."
+            },
+            {
+              "type": "method",
+              "name": "_embed_and_store",
+              "lineno": 52,
+              "purpose": "Embed entity labels and register them in the vector store."
+            },
+            {
+              "type": "method",
+              "name": "update_embeddings_after_community",
+              "lineno": 78,
+              "purpose": "Refresh vector store metadata after community detection is complete."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/ingestion/loader.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "DocumentChunk",
+          "lineno": 22,
+          "purpose": "A single chunk of text from a document.",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "DocumentLoader",
+          "lineno": 30,
+          "purpose": "Load documents from file paths or raw strings.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "load_file",
+              "lineno": 34,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_load_pdf",
+              "lineno": 43,
+              "purpose": "Try PyMuPDF first (best for ArXiv/LaTeX papers),"
+            },
+            {
+              "type": "method",
+              "name": "load_texts",
+              "lineno": 111,
+              "purpose": "Return list of (text, source_name) pairs."
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "Chunker",
+          "lineno": 116,
+          "purpose": "Splits documents into overlapping text chunks.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 122,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "chunk_text",
+              "lineno": 126,
+              "purpose": "Split text into overlapping chunks."
+            },
+            {
+              "type": "method",
+              "name": "_clean_pdf_text",
+              "lineno": 200,
+              "purpose": "Clean common PDF extraction artifacts:"
+            },
+            {
+              "type": "method",
+              "name": "chunk_documents",
+              "lineno": 219,
+              "purpose": "Chunk a list of (text, source) pairs."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/pipeline.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "IngestResult",
+          "lineno": 39,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "Pipeline",
+          "lineno": 48,
+          "purpose": "Full RLM-GraphRAG pipeline for one experimental variant.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 58,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_build_traverser",
+              "lineno": 84,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "from_config",
+              "lineno": 101,
+              "purpose": "Construct pipeline from AppConfig. Preferred factory method."
+            },
+            {
+              "type": "method",
+              "name": "ingest",
+              "lineno": 119,
+              "purpose": "Full ingestion pipeline: (text, source) pairs \u2192 KG with communities."
+            },
+            {
+              "type": "method",
+              "name": "query",
+              "lineno": 181,
+              "purpose": "Full query pipeline: question \u2192 grounded answer with evaluation metrics."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/retrieval/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "src/retrieval/answer_generator.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "GeneratedAnswer",
+          "lineno": 27,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "AnswerGenerator",
+          "lineno": 37,
+          "purpose": "Generates answers from context using the configured LLM.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 40,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "generate",
+              "lineno": 44,
+              "purpose": "Generate answer given a question and context string."
+            },
+            {
+              "type": "method",
+              "name": "generate_sync",
+              "lineno": 67,
+              "purpose": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/retrieval/context_assembler.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "ContextAssembler",
+          "lineno": 24,
+          "purpose": "Assembles a text context from retrieved triples.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 30,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "assemble",
+              "lineno": 38,
+              "purpose": "Build a context string from traversal results."
+            },
+            {
+              "type": "method",
+              "name": "_deduplicate",
+              "lineno": 79,
+              "purpose": "Remove near-duplicate triples using text similarity."
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "QAResult",
+          "lineno": 113,
+          "purpose": "Complete result for one query.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__post_init__",
+              "lineno": 125,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "AnswerGenerator",
+          "lineno": 140,
+          "purpose": "Generates answers by combining retrieved context with an LLM call.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 145,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "generate",
+              "lineno": 149,
+              "purpose": "Generate an answer given query and context."
+            },
+            {
+              "type": "method",
+              "name": "generate_sync",
+              "lineno": 162,
+              "purpose": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/retrieval/retrieval.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "SeedEntityLinker",
+          "lineno": 18,
+          "purpose": "Links query text to seed entities in the KG via vector similarity.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 21,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "find_seeds",
+              "lineno": 26,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "ContextAssembler",
+          "lineno": 48,
+          "purpose": "Assembles deduplicated context string from traversal results.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 51,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "assemble",
+              "lineno": 54,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_near_dup",
+              "lineno": 74,
+              "purpose": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/retrieval/seed_linker.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "SeedEntityLinker",
+          "lineno": 15,
+          "purpose": "Links a natural-language query to seed entities in the graph",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 21,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "link",
+              "lineno": 31,
+              "purpose": "Find the most relevant seed entities for a query."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/traversal/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "src/traversal/base.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "TraversalResult",
+          "lineno": 19,
+          "purpose": "Result from any traversal strategy.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "to_context_text",
+              "lineno": 28,
+              "purpose": "Serialize triples to text context for LLM consumption."
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "Traverser",
+          "lineno": 44,
+          "purpose": "Abstract traversal strategy.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "traverse",
+              "lineno": 48,
+              "purpose": "Traverse the graph starting from seed entities."
+            },
+            {
+              "type": "method",
+              "name": "get_name",
+              "lineno": 68,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "FixedHopTraverser",
+          "lineno": 77,
+          "purpose": "Baseline K-hop traversal.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 83,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "get_name",
+              "lineno": 87,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "traverse",
+              "lineno": 90,
+              "purpose": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/traversal/parallel_dispatcher.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "ConvergenceScore",
+          "lineno": 26,
+          "purpose": "Convergence information for a single node.",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "ParallelTraversalResult",
+          "lineno": 35,
+          "purpose": "Extended result with convergence data.",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "ConvergenceScorer",
+          "lineno": 42,
+          "purpose": "Computes convergence scores from parallel traversal results.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 51,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "score",
+              "lineno": 59,
+              "purpose": "Score all nodes by how many traversal paths reached them."
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "ParallelDispatcher",
+          "lineno": 110,
+          "purpose": "Contribution 4: Multi-Entity Parallel Traversal with Convergence Scoring.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 122,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "get_name",
+              "lineno": 134,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "traverse",
+              "lineno": 138,
+              "purpose": "Synchronous entry point."
+            },
+            {
+              "type": "method",
+              "name": "_parallel_traverse",
+              "lineno": 154,
+              "purpose": "Core parallel traversal logic."
+            },
+            {
+              "type": "method",
+              "name": "_async_single_traverse",
+              "lineno": 248,
+              "purpose": "Async wrapper for the single traverser."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/traversal/rlm_traverser.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "GraphREPL",
+          "lineno": 82,
+          "purpose": "A restricted Python execution environment that exposes",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 89,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "execute",
+              "lineno": 96,
+              "purpose": "Execute safe graph operations in the graph context."
+            },
+            {
+              "type": "method",
+              "name": "get_state_summary",
+              "lineno": 159,
+              "purpose": "Return a brief summary of current state for the LLM prompt."
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "RLMTraverser",
+          "lineno": 168,
+          "purpose": "Contribution 3: RLM-Guided Graph Traversal.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 177,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "get_name",
+              "lineno": 182,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "traverse",
+              "lineno": 185,
+              "purpose": "Synchronous wrapper for async RLM traversal."
+            },
+            {
+              "type": "method",
+              "name": "_traverse_async",
+              "lineno": 212,
+              "purpose": "Core async RLM traversal loop."
+            },
+            {
+              "type": "method",
+              "name": "_extract_code",
+              "lineno": 273,
+              "purpose": "Extract Python code block from LLM response."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/utils/__init__.py",
+      "symbols": []
+    },
+    {
+      "file": "src/utils/config.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "LLMConfig",
+          "lineno": 20,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "EmbeddingsConfig",
+          "lineno": 32,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "IngestionConfig",
+          "lineno": 39,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "ConfidenceAxesConfig",
+          "lineno": 50,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "ConfidenceConfig",
+          "lineno": 56,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "LeidenConfig",
+          "lineno": 64,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "CWLeidenConfig",
+          "lineno": 70,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "RLMCommunityConfig",
+          "lineno": 77,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "CommunityConfig",
+          "lineno": 82,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "FixedHopConfig",
+          "lineno": 89,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "RLMTraversalConfig",
+          "lineno": 93,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "TraversalConfig",
+          "lineno": 101,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "ParallelConfig",
+          "lineno": 107,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "VectorStoreConfig",
+          "lineno": 115,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "RetrievalConfig",
+          "lineno": 122,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "AnswerGenerationConfig",
+          "lineno": 128,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "EvaluationConfig",
+          "lineno": 136,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "LoggingConfig",
+          "lineno": 143,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "ProjectConfig",
+          "lineno": 149,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "AppConfig",
+          "lineno": 160,
+          "purpose": "",
+          "methods": [
+            {
+              "type": "method",
+              "name": "resolve_env_vars",
+              "lineno": 179,
+              "purpose": "Override with environment variable values if set."
+            }
+          ]
+        },
+        {
+          "type": "function",
+          "name": "_deep_merge",
+          "lineno": 209,
+          "purpose": "Recursively merge override into base."
+        },
+        {
+          "type": "function",
+          "name": "load_config",
+          "lineno": 222,
+          "purpose": "Load and merge configuration from YAML files."
+        },
+        {
+          "type": "function",
+          "name": "load_config_for_variant",
+          "lineno": 249,
+          "purpose": "Convenience loader: resolves variant path by name."
+        }
+      ]
+    },
+    {
+      "file": "src/utils/llm_client.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "LLMResponse",
+          "lineno": 20,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "CostTracker",
+          "lineno": 29,
+          "purpose": "",
+          "methods": [
+            {
+              "type": "method",
+              "name": "record",
+              "lineno": 36,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "summary",
+              "lineno": 48,
+              "purpose": ""
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "LLMClient",
+          "lineno": 58,
+          "purpose": "Unified LLM client. Instantiate once, call generate() everywhere.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 67,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_init_client",
+              "lineno": 73,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "generate",
+              "lineno": 112,
+              "purpose": "Generate a completion. Falls back gracefully."
+            },
+            {
+              "type": "method",
+              "name": "_dispatch",
+              "lineno": 139,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_call_gemini",
+              "lineno": 156,
+              "purpose": "Call Gemini via loop.run_in_executor for async compatibility."
+            },
+            {
+              "type": "method",
+              "name": "_call_ollama",
+              "lineno": 178,
+              "purpose": "Call Ollama via its async interface (run sync in executor)."
+            },
+            {
+              "type": "method",
+              "name": "_call_groq",
+              "lineno": 206,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_call_openai",
+              "lineno": 228,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_call_anthropic",
+              "lineno": 250,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "generate_sync",
+              "lineno": 269,
+              "purpose": "Synchronous wrapper for non-async contexts."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/utils/logger.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "setup_logging",
+          "lineno": 16,
+          "purpose": "Configure structlog for the entire application."
+        },
+        {
+          "type": "function",
+          "name": "get_logger",
+          "lineno": 54,
+          "purpose": "Return a named structured logger."
+        },
+        {
+          "type": "class",
+          "name": "ExperimentLogger",
+          "lineno": 59,
+          "purpose": "Writes per-query experiment records to a JSONL file.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 65,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "record",
+              "lineno": 70,
+              "purpose": "Write one record to the JSONL log."
+            },
+            {
+              "type": "method",
+              "name": "read_all",
+              "lineno": 76,
+              "purpose": "Read all records from the JSONL file."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "src/utils/vector_store.py",
+      "symbols": [
+        {
+          "type": "class",
+          "name": "SearchResult",
+          "lineno": 20,
+          "purpose": "",
+          "methods": []
+        },
+        {
+          "type": "class",
+          "name": "VectorStore",
+          "lineno": 27,
+          "purpose": "ChromaDB-backed entity vector store.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 34,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_init",
+              "lineno": 39,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "add_entities",
+              "lineno": 60,
+              "purpose": "Add entities to the vector store."
+            },
+            {
+              "type": "method",
+              "name": "search",
+              "lineno": 84,
+              "purpose": "Find the top-k most similar entities to the query embedding."
+            },
+            {
+              "type": "method",
+              "name": "count",
+              "lineno": 116,
+              "purpose": "Return total number of stored entities."
+            },
+            {
+              "type": "method",
+              "name": "clear",
+              "lineno": 120,
+              "purpose": "Remove all entities from the collection."
+            }
+          ]
+        },
+        {
+          "type": "class",
+          "name": "EmbeddingModel",
+          "lineno": 126,
+          "purpose": "Wrapper for sentence-transformers embeddings.",
+          "methods": [
+            {
+              "type": "method",
+              "name": "__init__",
+              "lineno": 132,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_resolve_device",
+              "lineno": 139,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "_load",
+              "lineno": 148,
+              "purpose": ""
+            },
+            {
+              "type": "method",
+              "name": "encode",
+              "lineno": 154,
+              "purpose": "Encode a list of texts to embeddings."
+            },
+            {
+              "type": "method",
+              "name": "encode_single",
+              "lineno": 174,
+              "purpose": "Encode a single text and return as list."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "file": "tmp/check_db.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "check_db",
+          "lineno": 10,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "tmp/diagnostic_suite.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "test_imports",
+          "lineno": 11,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "test_db_connection",
+          "lineno": 24,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "test_pdf_parser",
+          "lineno": 36,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "test_llm_generation",
+          "lineno": 51,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "test_rag_ingestion_smoke",
+          "lineno": 65,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "run_all",
+          "lineno": 78,
+          "purpose": ""
+        }
+      ]
+    },
+    {
+      "file": "tmp/prod_stress_test.py",
+      "symbols": [
+        {
+          "type": "function",
+          "name": "test_endpoint",
+          "lineno": 8,
+          "purpose": ""
+        },
+        {
+          "type": "function",
+          "name": "main",
+          "lineno": 28,
+          "purpose": ""
+        }
+      ]
+    }
+  ]
+}

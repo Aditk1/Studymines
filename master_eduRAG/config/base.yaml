@@ -12,13 +12,15 @@ project:
 # LLM Backend
 # -----------------------------------------------------------------------------
 llm:
-  provider: "ollama"          # ollama | openai | anthropic
+  provider: "ollama"          # ollama | groq | openai | anthropic | gemini
   model: "llama3.2:3b"
   temperature: 0.0
   max_tokens: 1024
   timeout: 120
   # Ollama-specific
   ollama_base_url: "http://localhost:11434"
+  # Groq-specific
+  groq_base_url: "https://api.groq.com/openai/v1"
   # OpenAI-specific (set via env: OPENAI_API_KEY)
   openai_model: "gpt-4o-mini"
   # Anthropic-specific (set via env: ANTHROPIC_API_KEY)

@@ -95,39 +95,66 @@ class GraphREPL:
 
     def execute(self, code: str) -> str:
         """
-        Execute Python code in the graph context.
+        Execute safe graph operations in the graph context.
+        Replaces unsafe exec() with a controlled dispatcher.
 
         Args:
-            code: Python code string from the LLM.
+            code: Text from LLM suggesting operations.
 
         Returns:
-            String output (stdout or error message).
+            String status message.
         """
         self._exec_count += 1
-        # Execution namespace
-        namespace: dict[str, Any] = {
-            "graph": self.graph,
-            "collected_triples": self.collected_triples,
-        }
-
-        import io
-        import contextlib
-
-        stdout_capture = io.StringIO()
+        
+        # Simple parser for the allowed functions
+        import re
+        
+        operations_performed = []
+        
         try:
-            with contextlib.redirect_stdout(stdout_capture):
-                exec(textwrap.dedent(code), namespace)  # noqa: S102
-            # Sync back collected triples
-            self.collected_triples = namespace.get("collected_triples", self.collected_triples)
+            # 1. Look for neighbors calls: graph.get_neighbors("entity", min_confidence=0.4)
+            neighbor_matches = re.finditer(r'graph\.get_neighbors\("([^"]+)"(?:,\s*min_confidence=([\d\.]+))?\)', code)
+            for m in neighbor_matches:
+                entity = m.group(1)
+                conf = float(m.group(2)) if m.group(2) else self.min_confidence
+                neighbors = self.graph.get_neighbors(entity, min_confidence=conf)
+                # Auto-expand subgraph for found neighbors to fill collected_triples
+                for n in neighbors[:5]:
+                    triples = self.graph.get_subgraph([n["entity"]], depth=1, min_confidence=conf)
+                    self.collected_triples.extend(triples)
+                operations_performed.append(f"Explored neighbors of '{entity}'")
+
+            # 2. Look for subgraph calls: graph.get_subgraph(["entity"], depth=1)
+            subgraph_matches = re.finditer(r'graph\.get_subgraph\(\["([^"]+)"\](?:,\s*depth=(\d+))?(?:,\s*min_confidence=([\d\.]+))?\)', code)
+            for m in subgraph_matches:
+                entity = m.group(1)
+                depth = int(m.group(2)) if m.group(2) else 1
+                conf = float(m.group(3)) if m.group(3) else self.min_confidence
+                triples = self.graph.get_subgraph([entity], depth=depth, min_confidence=conf)
+                self.collected_triples.extend(triples)
+                operations_performed.append(f"Retrieved subgraph for '{entity}' at depth {depth}")
+
+            # 3. Look for path calls: graph.get_path("a", "b")
+            path_matches = re.finditer(r'graph\.get_path\("([^"]+)",\s*"([^"]+)"\)', code)
+            for m in path_matches:
+                a, b = m.groups()
+                triples = self.graph.get_path(a, b)
+                if triples:
+                    self.collected_triples.extend(triples)
+                    operations_performed.append(f"Found path between '{a}' and '{b}'")
+
             # Track visited nodes
             for t in self.collected_triples:
                 self.nodes_visited.add(t.subject)
                 self.nodes_visited.add(t.obj)
-            return stdout_capture.getvalue() or "OK"
-        except Exception:
-            tb = traceback.format_exc()
-            logger.debug("repl_exec_error", error=tb[:300])
-            return f"ERROR: {tb[:300]}"
+
+            if not operations_performed:
+                return "OK - (No matching operations found in output)"
+            return "OK: " + "; ".join(operations_performed)
+            
+        except Exception as e:
+            logger.debug("repl_safe_exec_error", error=str(e))
+            return f"ERROR: {str(e)}"
 
     def get_state_summary(self) -> str:
         """Return a brief summary of current state for the LLM prompt."""

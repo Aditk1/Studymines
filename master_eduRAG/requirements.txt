@@ -2,6 +2,9 @@
 # master_eduRAG — Unified Dependencies
 # Studymines (Adaptive Learning) + RLM-GraphRAG (Cognitive Core)
 # ============================================================
+# NOTE: To install these AND pre-download AI models, run:
+# powershell .\setup.ps1
+# ============================================================
 
 # --- Web Framework ---
 fastapi>=0.110.0
@@ -17,17 +20,20 @@ python-dotenv
 pymupdf>=1.24.0
 python-pptx
 python-docx
+marker-pdf
+docling
 
 # --- Vision / OCR (Studymines SAEOCR) ---
 pillow>=10.0.0
 opencv-python>=4.9.0
 google-generativeai>=0.5.0
+paddleocr
 
 # --- Core ML (RLM-GraphRAG) ---
 torch>=2.1.0
-transformers>=4.38.0
+transformers>=4.40.0
 sentence-transformers>=2.6.0
-spacy>=3.7.0
+spacy>=3.8.0
 
 # --- Knowledge Graph (RLM-GraphRAG) ---
 networkx>=3.2.0
@@ -37,11 +43,15 @@ python-igraph>=0.11.0
 
 # --- Vector Store ---
 chromadb>=0.4.24
+passlib
+bcrypt
 
 # --- LLM Backends (RLM-GraphRAG) ---
 ollama>=0.1.8
+groq>=0.11.0
 openai>=1.12.0
 anthropic>=0.23.0
+cerebras-cloud-sdk
 
 # --- Config & Validation ---
 pydantic>=2.6.0

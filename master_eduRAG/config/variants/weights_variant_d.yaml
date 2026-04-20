@@ -1,0 +1,6 @@
+# weights_variant_d — equal weights (0.33 / 0.33 / 0.34)
+confidence:
+  axes:
+    factual_weight: 0.33
+    specificity_weight: 0.33
+    coherence_weight: 0.34

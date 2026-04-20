@@ -278,23 +278,26 @@ class KnowledgeGraph:
     # ------------------------------------------------------------------
 
     def save(self, path: str | Path) -> None:
-        """Save graph to disk using pickle."""
+        """Save graph to disk using JSON."""
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        with path.open("wb") as f:
-            pickle.dump({"graph": self._g, "stats": self.stats}, f)
-        logger.info("graph_saved", path=str(path), nodes=self._g.number_of_nodes())
+        # Convert NetworkX graph to JSON-serializable dict
+        graph_data = nx.node_link_data(self._g)
+        with path.open("w") as f:
+            json.dump({"graph": graph_data, "stats": self.stats}, f)
+        logger.info("graph_saved_json", path=str(path), nodes=self._g.number_of_nodes())
 
     @classmethod
     def load(cls, path: str | Path) -> "KnowledgeGraph":
-        """Load graph from disk."""
+        """Load graph from disk using JSON."""
         path = Path(path)
         kg = cls()
-        with path.open("rb") as f:
-            data = pickle.load(f)
-        kg._g = data["graph"]
+        with path.open("r") as f:
+            data = json.load(f)
+        # Reconstruct NetworkX graph from dict
+        kg._g = nx.node_link_graph(data["graph"])
         kg.stats = data.get("stats", {})
-        logger.info("graph_loaded", path=str(path), nodes=kg._g.number_of_nodes())
+        logger.info("graph_loaded_json", path=str(path), nodes=kg._g.number_of_nodes())
         return kg
 
     def to_networkx(self) -> nx.DiGraph:

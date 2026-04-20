@@ -1,0 +1,6 @@
+# weights_variant_c — coherence-heavy (0.30 / 0.35 / 0.35)
+confidence:
+  axes:
+    factual_weight: 0.30
+    specificity_weight: 0.35
+    coherence_weight: 0.35

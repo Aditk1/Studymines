@@ -1,0 +1,6 @@
+# weights_baseline — 0.40 / 0.35 / 0.25 (paper default)
+confidence:
+  axes:
+    factual_weight: 0.40
+    specificity_weight: 0.35
+    coherence_weight: 0.25

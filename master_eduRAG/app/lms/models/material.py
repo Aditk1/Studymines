@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, JSON
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, JSON, Float
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.database import Base
@@ -26,8 +26,15 @@ class LMSMaterial(Base):
     status = Column(String(50), default="pending")
     error_message = Column(Text, nullable=True)
     
-    from sqlalchemy.dialects.postgresql import UUID
     uploaded_by = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    
+    # ── AI & Study Package Integration ──
+    study_package = Column(Text, nullable=True)
+    graph_path = Column(String(512), nullable=True)
+    graph_triples_count = Column(Integer, nullable=True)
+    graph_confidence = Column(Float, nullable=True)
+    file_path = Column(String(512), nullable=True)
+
     created_at = Column(DateTime, default=datetime.utcnow)
     deleted_at = Column(DateTime, nullable=True, default=None)
 

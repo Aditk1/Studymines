@@ -1,0 +1,146 @@
+[
+  {
+    "name": "student-dashboard-mobile",
+    "auth": {
+      "success": true,
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwNDljZjliMC1mY2FkLTQyNjgtYjhhZC1kOTg5YmFlNzM3Y2UiLCJleHAiOjE3NzY1MTc4MDgsImF1ZCI6ImF1dGhlbnRpY2F0ZWQifQ.j-plbXDetYUVmt6AuEb3OdbyPTzc2JZtnBvyHUHzpdI",
+      "token_type": "bearer",
+      "user": {
+        "id": "049cf9b0-fcad-4268-b8ad-d989bae737ce",
+        "name": "Audit Student",
+        "email": "audit_student@example.com",
+        "role": "student",
+        "student_level": "undergraduate"
+      }
+    },
+    "route": "/dashboard",
+    "width": 375,
+    "height": 812,
+    "extras": {
+      "studymines_upload_id": "2"
+    },
+    "scrollWidth": 375,
+    "innerWidth": 375,
+    "bodyScrollWidth": 375,
+    "hasHorizontalOverflow": false
+  },
+  {
+    "name": "student-upload-tablet",
+    "auth": {
+      "success": true,
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwNDljZjliMC1mY2FkLTQyNjgtYjhhZC1kOTg5YmFlNzM3Y2UiLCJleHAiOjE3NzY1MTc4MDgsImF1ZCI6ImF1dGhlbnRpY2F0ZWQifQ.j-plbXDetYUVmt6AuEb3OdbyPTzc2JZtnBvyHUHzpdI",
+      "token_type": "bearer",
+      "user": {
+        "id": "049cf9b0-fcad-4268-b8ad-d989bae737ce",
+        "name": "Audit Student",
+        "email": "audit_student@example.com",
+        "role": "student",
+        "student_level": "undergraduate"
+      }
+    },
+    "route": "/upload",
+    "width": 768,
+    "height": 1024,
+    "extras": {
+      "studymines_upload_id": "2"
+    },
+    "scrollWidth": 768,
+    "innerWidth": 768,
+    "bodyScrollWidth": 768,
+    "hasHorizontalOverflow": false
+  },
+  {
+    "name": "student-study-lab-desktop",
+    "auth": {
+      "success": true,
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwNDljZjliMC1mY2FkLTQyNjgtYjhhZC1kOTg5YmFlNzM3Y2UiLCJleHAiOjE3NzY1MTc4MDgsImF1ZCI6ImF1dGhlbnRpY2F0ZWQifQ.j-plbXDetYUVmt6AuEb3OdbyPTzc2JZtnBvyHUHzpdI",
+      "token_type": "bearer",
+      "user": {
+        "id": "049cf9b0-fcad-4268-b8ad-d989bae737ce",
+        "name": "Audit Student",
+        "email": "audit_student@example.com",
+        "role": "student",
+        "student_level": "undergraduate"
+      }
+    },
+    "route": "/study-lab",
+    "width": 1280,
+    "height": 900,
+    "extras": {
+      "studymines_upload_id": "2"
+    },
+    "scrollWidth": 1280,
+    "innerWidth": 1280,
+    "bodyScrollWidth": 1280,
+    "hasHorizontalOverflow": false
+  },
+  {
+    "name": "teacher-studio-mobile",
+    "auth": {
+      "success": true,
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyYmNkYWE0MS1hYzU1LTQzMWUtYjQ2Mi01OGU0MDkzOWIyYzMiLCJleHAiOjE3NzY1MTc4MDgsImF1ZCI6ImF1dGhlbnRpY2F0ZWQifQ.uucpaFF9B4ZRehW28WrrZ7-7vz6RiM-F2RsaiKdvsWE",
+      "token_type": "bearer",
+      "user": {
+        "id": "2bcdaa41-ac55-431e-b462-58e40939b2c3",
+        "name": "Audit Teacher",
+        "email": "audit_teacher@teacher.edu",
+        "role": "teacher",
+        "student_level": "postgraduate"
+      }
+    },
+    "route": "/studio",
+    "width": 375,
+    "height": 812,
+    "extras": {},
+    "scrollWidth": 375,
+    "innerWidth": 375,
+    "bodyScrollWidth": 375,
+    "hasHorizontalOverflow": false
+  },
+  {
+    "name": "teacher-analytics-tablet",
+    "auth": {
+      "success": true,
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyYmNkYWE0MS1hYzU1LTQzMWUtYjQ2Mi01OGU0MDkzOWIyYzMiLCJleHAiOjE3NzY1MTc4MDgsImF1ZCI6ImF1dGhlbnRpY2F0ZWQifQ.uucpaFF9B4ZRehW28WrrZ7-7vz6RiM-F2RsaiKdvsWE",
+      "token_type": "bearer",
+      "user": {
+        "id": "2bcdaa41-ac55-431e-b462-58e40939b2c3",
+        "name": "Audit Teacher",
+        "email": "audit_teacher@teacher.edu",
+        "role": "teacher",
+        "student_level": "postgraduate"
+      }
+    },
+    "route": "/analytics",
+    "width": 768,
+    "height": 1024,
+    "extras": {},
+    "scrollWidth": 768,
+    "innerWidth": 768,
+    "bodyScrollWidth": 768,
+    "hasHorizontalOverflow": false
+  },
+  {
+    "name": "teacher-profile-desktop",
+    "auth": {
+      "success": true,
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyYmNkYWE0MS1hYzU1LTQzMWUtYjQ2Mi01OGU0MDkzOWIyYzMiLCJleHAiOjE3NzY1MTc4MDgsImF1ZCI6ImF1dGhlbnRpY2F0ZWQifQ.uucpaFF9B4ZRehW28WrrZ7-7vz6RiM-F2RsaiKdvsWE",
+      "token_type": "bearer",
+      "user": {
+        "id": "2bcdaa41-ac55-431e-b462-58e40939b2c3",
+        "name": "Audit Teacher",
+        "email": "audit_teacher@teacher.edu",
+        "role": "teacher",
+        "student_level": "postgraduate"
+      }
+    },
+    "route": "/profile",
+    "width": 1280,
+    "height": 900,
+    "extras": {},
+    "scrollWidth": 1280,
+    "innerWidth": 1280,
+    "bodyScrollWidth": 1280,
+    "hasHorizontalOverflow": false
+  }
+]

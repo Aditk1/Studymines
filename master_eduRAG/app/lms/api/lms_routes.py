@@ -33,9 +33,23 @@ async def get_explore_classrooms(db: Session = Depends(get_db)):
     return [{"id": c.id, "name": c.name, "subject": c.subject, "code": c.code} for c in classrooms]
 
 
-@router.get("/courses/{course_id}/architecture", tags=["Studio"])
-async def get_course_architecture(course_id: int, db: Session = Depends(get_db)):
-    """Retrieve the full module/section structure for a course."""
+@router.get("/courses/{course_id}/architecture", tags=["Courses"])
+async def get_course_architecture_consolidated(
+    course_id: int, 
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """Retrieve full course sections and modules hierarchy with access control."""
+    course = db.query(Course).filter(Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    
+    # Secure check: only instructor or enrolled students (or admin) can see full architecture
+    if user.role not in ["teacher", "admin"] and course.status != "published":
+        enrollment = db.query(Enrollment).filter(Enrollment.course_id == course_id, Enrollment.user_id == user.id).first()
+        if not enrollment:
+            raise HTTPException(status_code=403, detail="Not authorized to view course architecture")
+
     sections = db.query(Section).filter(Section.course_id == course_id).order_by(Section.order).all()
     results = []
     for s in sections:
@@ -43,7 +57,9 @@ async def get_course_architecture(course_id: int, db: Session = Depends(get_db))
         results.append({
             "id": s.id,
             "title": s.title,
-            "modules": [{"id": m.id, "title": m.title, "type": m.content_type} for m in modules]
+            "summary": getattr(s, 'summary', ""),
+            "order": s.order,
+            "modules": [{"id": m.id, "title": m.title, "type": m.content_type, "is_conditional": m.is_conditional} for m in modules]
         })
     return results
 
@@ -210,8 +226,15 @@ async def get_global_materials(db: Session = Depends(get_db)):
     materials = db.query(LMSMaterial).order_by(LMSMaterial.created_at.desc()).all()
     results = []
     for m in materials:
-        import json
-        pkg = json.loads(m.study_package) if m.study_package else {}
+        pkg = {}
+        if m.study_package:
+            try:
+                pkg = json.loads(m.study_package)
+                if isinstance(pkg, dict) and "package" in pkg:
+                    pkg = pkg["package"]
+            except Exception:
+                pass
+                
         results.append({
             "id": m.id,
             "title": m.title,
@@ -322,13 +345,13 @@ async def upload_material(
         # Manual override or auto-segregation
         segregation = {"subject": "LMS", "topic": title, "method": "manual"} 
         
-        study_package = await chunk_and_process(
+        raw_res = await chunk_and_process(
             text, "undergraduate",
             segregation["subject"], segregation["topic"],
             source_name=file.filename
         )
-
-        graph_meta = study_package.get("graph_metadata", {})
+        study_package = raw_res["package"]
+        graph_meta = raw_res.get("stats", {}) # Called stats in chunk_and_process
         
         # 4. Create Record
         material = LMSMaterial(
@@ -403,11 +426,20 @@ async def create_new_course(
     db.refresh(course)
     return {"success": True, "course_id": course.id}
 
-@router.get("/courses", tags=["Teacher Studio"])
-async def list_courses(db: Session = Depends(get_db)):
-    """List all high-level courses/learning paths."""
-    courses = db.query(Course).all()
-    return [{"id": c.id, "name": c.title, "subject": c.subject, "description": c.description} for c in courses]
+@router.get("/courses", tags=["Courses"])
+async def list_courses_consolidated(
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user)
+):
+    """List courses based on user role: Teachers see owned, students see published."""
+    if user.role in ["teacher", "admin"]:
+        courses = db.query(Course).filter(Course.instructor_id == user.id).all()
+    else:
+        courses = db.query(Course).filter(Course.status == "published").all()
+    return [
+        {"id": c.id, "title": c.title, "description": c.description, "subject": c.subject, "status": c.status} 
+        for c in courses
+    ]
 
 
 class SectionCreate(BaseModel):
@@ -459,33 +491,7 @@ async def create_module(
     return {"success": True, "module_id": module.id}
 
 
-@router.get("/courses/{course_id}/modules", tags=["Content Matrix"])
-async def get_course_structure(
-    course_id: int,
-    db: Session = Depends(get_db),
-    user: User = Depends(get_current_user)
-):
-    """Retrieve full course sections and modules hierarchy."""
-    course = db.query(Course).filter(Course.id == course_id).first()
-    if not course:
-        raise HTTPException(status_code=404, detail="Course not found")
-    
-    sections = db.query(Section).filter(Section.course_id == course_id).order_by(Section.order).all()
-    
-    result = []
-    for s in sections:
-        mods = db.query(LessonModule).filter(LessonModule.section_id == s.id).order_by(LessonModule.order).all()
-        result.append({
-            "id": s.id,
-            "title": s.title,
-            "order": s.order,
-            "summary": s.summary,
-            "modules": [
-                {"id": m.id, "title": m.title, "type": m.content_type, "is_conditional": m.is_conditional}
-                for m in mods
-            ]
-        })
-    return result
+# --- Removed Duplicate Route: get_course_structure ---
 
 
 class EventCreate(BaseModel):
@@ -966,20 +972,7 @@ async def get_all_assignments(db: Session = Depends(get_db), user: User = Depend
         for a in db.query(Assessment).all()
     ]
 
-@router.get("/courses/{course_id}/full", tags=["Teacher Studio"])
-async def get_course_full_view(course_id: int, db: Session = Depends(get_db)):
-    """Retrieve the real content structure for clinical architecture."""
-    sections = db.query(Section).filter(Section.course_id == course_id).order_by(Section.order).all()
-    
-    results = []
-    for s in sections:
-        modules = db.query(LessonModule).filter(LessonModule.section_id == s.id).order_by(LessonModule.order).all()
-        results.append({
-            "id": s.id,
-            "title": s.title,
-            "modules": [{"id": m.id, "title": m.title, "type": m.content_type} for m in modules]
-        })
-    return results
+# --- Removed Duplicate Route: get_course_full_view ---
 
 
 @router.get("/stats/heatmap", tags=["Analytics"])
@@ -1095,14 +1088,7 @@ async def get_global_chats(db: Session = Depends(get_db), user: User = Depends(g
 # ═══════════════════════════════════════════════════════════════
 # INSTRUCTOR STUDIO (AI ARCHITECTURE)
 # ═══════════════════════════════════════════════════════════════
-@router.get("/courses", tags=["Studio"])
-async def get_courses(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    """List all courses. Teachers see their own, students see published ones."""
-    if user.role in ["teacher", "admin"]:
-        courses = db.query(Course).filter(Course.instructor_id == user.id).all()
-    else:
-        courses = db.query(Course).filter(Course.status == "published").all()
-    return [{"id": c.id, "title": c.title, "description": c.description, "status": c.status} for c in courses]
+# --- Removed Duplicate Route: get_courses ---
 
 @router.post("/courses", tags=["Studio"])
 async def create_course(data: dict, db: Session = Depends(get_db), user: User = Depends(require_role(["teacher", "admin"]))):
@@ -1129,19 +1115,7 @@ async def add_course_section(course_id: int, data: dict, db: Session = Depends(g
     db.commit()
     return {"section_id": section.id, "success": True}
 
-@router.get("/courses/{course_id}/modules", tags=["Studio"])
-async def get_course_modules(course_id: int, db: Session = Depends(get_db)):
-    """Recall the full section/module tree for the editor."""
-    sections = db.query(Section).filter(Section.course_id == course_id).order_by(Section.order).all()
-    results = []
-    for s in sections:
-        modules = db.query(LessonModule).filter(LessonModule.section_id == s.id).order_by(LessonModule.order).all()
-        results.append({
-            "id": s.id,
-            "title": s.title,
-            "modules": [{"id": m.id, "title": m.title, "type": m.content_type} for m in modules]
-        })
-    return results
+# --- Removed Duplicate Route: get_course_modules ---
 
 @router.post("/studio/publish-architecture/{course_id}", tags=["Studio"])
 async def publish_course_architecture(

@@ -87,7 +87,7 @@ export default function Dashboard({ userId, onOpenArtifact, onOpenAssessment }) 
         </div>
         <div className="flex gap-3">
           <button 
-            onClick={() => navigate('/explore-labs')}
+            onClick={() => navigate('/research')}
             className="bg-white text-black px-6 py-3 rounded-2xl text-sm font-semibold hover:bg-white/90 transition-all flex items-center gap-2"
           >
             Explore Labs

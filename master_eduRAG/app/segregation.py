@@ -5,17 +5,25 @@ Auto-classifies content via Gemini or accepts manual labels.
 
 import json
 from typing import Dict, Optional
-from app.clients import get_model
+from app.clients import groq_generate_text, get_model, configure_gemini
 from app.llm.utils import clean_json_response
+from src.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class ContentSegregator:
     def __init__(self, api_key: Optional[str] = None):
-        # api_key is now handled centrally via environment or GeminiClient
+        """Initialize ContentSegregator with Gemini primary and Groq fallback."""
         if api_key:
-            from app.clients import configure_gemini
             configure_gemini(api_key)
-        self.model = get_model()
+        
+        try:
+            self.model = get_model()
+            logger.info("ContentSegregator: Initialized with Gemini")
+        except Exception as e:
+            logger.error(f"ContentSegregator: Gemini init failed: {e}")
+            self.model = None
 
     def manual_segregate(self, subject: str, topic: str) -> Dict[str, str]:
         return {"subject": subject.strip(), "topic": topic.strip(), "method": "manual"}
@@ -37,12 +45,24 @@ Respond ONLY with valid JSON:
     "confidence": "high/medium/low"
 }}"""
 
+        # A. Try Gemini
+        if self.model:
+            try:
+                response = self.model.generate_content(prompt)
+                result = clean_json_response(response.text)
+                result["method"] = "auto"
+                return result
+            except Exception as e:
+                logger.warning(f"ContentSegregator: Gemini failed: {e}. Falling back to Groq.")
+
+        # B. Try Groq
         try:
-            response = self.model.generate_content(prompt)
-            result = clean_json_response(response.text)
+            response_text = groq_generate_text(prompt)
+            result = clean_json_response(response_text)
             result["method"] = "auto"
             return result
         except Exception as e:
+            logger.error(f"ContentSegregator: Groq fallback failed: {e}")
             return {
                 "subject": "Unknown", "topic": "Unclassified",
                 "confidence": "low", "method": "auto", "error": str(e),

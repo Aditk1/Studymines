@@ -132,26 +132,85 @@ The `app/bridge.py` module is the heart of the integration:
 
 ---
 
-## 🧬 Research Contributions (C1–C4)
+## 🛡️ Multi-Provider Migration (Internalized)
 
-| ID | Contribution | Description |
-|:---|:---|:---|
-| **C1** | Confidence-Scored Extraction | LLM-based scoring for triple extraction |
-| **C2** | CW-Leiden Community Detection | Confidence-weighted semantic clustering |
-| **C3** | RLM REPL-Guided Traversal | Dynamic LLM-driven graph exploration |
-| **C4** | Parallel Multi-Seed Dispatcher | Async multi-entity traversal with convergence |
+To avoid Gemini rate-limits and optimize costs, the system has been migrated to a tiered multi-layered fallback architecture:
+
+1. **Local-First Extraction**:
+   - **PyMuPDF**: For standard PDFs.
+   - **Marker**: For structured educational materials.
+   - **Docling**: For complex/image-heavy documents.
+   - **PaddleOCR / TrOCR**: Local OCR for printed and handwritten images.
+
+2. **Cloud LLM Chain**:
+   - **Groq (Llama 3.3 70B)**: Primary for high-speed synthesis.
+   - **Cerebras (Llama 3.1 8B)**: Extremely fast secondary fallback.
+   - **Gemini 2.0 Flash**: Third-tier reasoning and vision.
+   - **OpenRouter (DeepSeek Free)**: Final cloud fallback.
+   - **Ollama**: Absolute local fallback (no API).
 
 ---
 
 ## 🛠️ Tech Stack
 
 - **Backend**: FastAPI + SQLAlchemy + Uvicorn
-- **Vision**: Gemini Vision API (SAEOCR)
+- **Extraction**: PyMuPDF + Marker + Docling (Local)
+- **Vision**: PaddleOCR + TrOCR (Local) + Groq/Gemini Vision (Cloud)
 - **Graph**: NetworkX + CDLib + Leiden
 - **Vector**: ChromaDB + Sentence-Transformers
-- **LLM**: Gemini / Ollama / OpenAI / Anthropic
-- **Evaluation**: ROUGE, BERTScore, Token F1
+- **LLM**: Groq / Cerebras / Gemini / OpenRouter / Ollama
+- **Evaluation**: ROUGE, BERTScore, Token F1, CER (OCR)
 
 ---
 
+## 🔬 Experimental Validation & Benchmarking
 
+The system includes a comprehensive suite for validating RAG performance and OCR accuracy.
+
+### 📈 Ablation Pipeline
+We evaluate the impact of each "Cognitive Layer" (C1-C4) using standardized RAG benchmarks.
+Available configurations in `config/variants/`:
+- `baseline.yaml`: Naive RAG (Vector only)
+- `plus_c1.yaml`: Knowledge Graph enrichment
+- `plus_c1_c2.yaml`: Confidence-weighted retrieval
+- `plus_c1_c2_c3.yaml`: Multi-hop community traversal
+- `full_edurag.yaml`: Complete tiered pipeline
+
+**Run a sanity check:**
+```bash
+python -m scripts.run_experiment --config config/sanity.yaml --dataset custom_qa --variant full_edurag --limit 5
+```
+
+### 📸 OCR Benchmarking
+Evaluate internal VisionExtractor (SAEOCR) against industry standards like Tesseract.
+```bash
+python -m scripts.ocr_benchmark \
+    --input data/ocr_bench/ \
+    --engines saeocr_v1.2 tesseract_v5 \
+    --by-type scanned_textbooks handwritten_notes annotated_pdfs \
+    --output results/ocr_breakdown.json \
+    --emit-markdown results/ocr_breakdown.md
+```
+
+### ⚖️ Sensitivity Analysis
+Test how the "Confidence Triad" (Factuality, Specificity, Coherence) affects answer quality.
+```bash
+# Example run with variant D weights
+python -m scripts.run_experiment --config config/variants/weights_variant_d.yaml --dataset custom_qa
+```
+
+---
+
+## 📝 Research & Publication
+
+The project includes all materials for the upcoming eduRAG research paper in the `paper finalization` directory.
+
+### 📚 Key Artifacts
+- **Current Draft**: `paper finalization/edurag_project/paper/final_paper_v2.pdf`
+- **Results Workbook**: `paper finalization/edurag_project/results/results_workbook.md`
+- **Autopilot Guide**: `paper finalization/edurag_project/experiments/run_commands.md`
+
+---
+
+## ⚖️ License
+Distributed under the MIT License. See `LICENSE` for more information.

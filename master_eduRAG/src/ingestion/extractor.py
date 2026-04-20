@@ -23,7 +23,7 @@ from typing import Any
 
 from src.graph.knowledge_graph import Triple
 from src.ingestion.loader import DocumentChunk
-from src.utils.config import IngestionConfig
+from src.utils.config import IngestionConfig, LLMConfig
 from src.utils.logger import get_logger
 
 logger = get_logger("extractor")
@@ -63,17 +63,16 @@ class LLMExtractor:
     Uses the same Ollama/OpenAI/Anthropic backend as the rest of the pipeline.
     """
 
-    def __init__(self, config: IngestionConfig) -> None:
+    def __init__(self, config: IngestionConfig, llm_config: LLMConfig | None = None) -> None:
         self.config = config
+        self.llm_config = llm_config
         self._llm: Any = None
 
     def _get_llm(self) -> Any:
         """Lazy-load LLM client."""
         if self._llm is None:
             from src.utils.llm_client import LLMClient
-            from src.utils.config import LLMConfig
-            # Use default LLM config — extractor shares the same backend
-            llm_config = LLMConfig()
+            llm_config = self.llm_config or LLMConfig()
             self._llm = LLMClient(llm_config)
         return self._llm
 
@@ -238,12 +237,12 @@ class TripleExtractor:
     "spacy" → SpaCyExtractor  (lightweight fallback)
     """
 
-    def __init__(self, config: IngestionConfig) -> None:
+    def __init__(self, config: IngestionConfig, llm_config: LLMConfig | None = None) -> None:
         self.config = config
         extractor_type = config.extractor
 
         if extractor_type == "llm":
-            self._extractor: Any = LLMExtractor(config)
+            self._extractor: Any = LLMExtractor(config, llm_config)
             logger.info("extractor_selected", type="llm",
                         note="Good for technical/academic documents")
         elif extractor_type == "rebel":
@@ -294,9 +293,15 @@ class TripleExtractor:
         return triples
 
     async def extract_from_chunks(self, chunks: list[DocumentChunk]) -> list[Triple]:
+        """Parallel extraction using asyncio.gather for speed."""
+        import asyncio
+        tasks = [self.extract_from_chunk(chunk) for chunk in chunks]
+        results = await asyncio.gather(*tasks)
+        
         all_triples: list[Triple] = []
-        for chunk in chunks:
-            all_triples.extend(await self.extract_from_chunk(chunk))
+        for triples in results:
+            all_triples.extend(triples)
+            
         logger.info("extraction_complete",
                     total_triples=len(all_triples),
                     num_chunks=len(chunks))

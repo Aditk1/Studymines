@@ -1,0 +1,98 @@
+# =============================================================================
+# Sanity-check config — fast smoke test (5 questions, limits everything)
+# Inherits from config/base.yaml; override values only.
+# =============================================================================
+
+project:
+  name: "rlm_graphrag_sanity"
+  version: "1.0.0"
+  seed: 42
+
+llm:
+  provider: "ollama"
+  model: "llama3.2:3b"
+  temperature: 0.0
+  max_tokens: 256          # shorter for speed
+  timeout: 60
+
+embeddings:
+  model: "sentence-transformers/all-MiniLM-L6-v2"
+  device: "cpu"            # CPU is fine for 5 questions
+  batch_size: 8
+  normalize: true
+
+ingestion:
+  chunk_size: 200
+  chunk_overlap: 32        # tighter for speed
+  extractor: "llm"
+  min_entity_length: 4
+  max_triples_per_chunk: 8  # fewer triples
+
+confidence:
+  enabled: true
+  axes:
+    factual_weight: 0.40
+    specificity_weight: 0.35
+    coherence_weight: 0.25
+  min_confidence_threshold: 0.15
+  batch_size: 4
+  mode: "fast"
+
+community:
+  strategy: "cw_leiden"
+  leiden:
+    resolution: 1.0
+    n_iterations: 5
+    seed: 42
+  cw_leiden:
+    resolution: 1.0
+    n_iterations: 5
+    seed: 42
+    weight_attribute: "confidence"
+
+traversal:
+  strategy: "rlm"
+  fixed_hop:
+    k: 2
+  rlm:
+    max_depth: 3            # shallow for sanity
+    max_nodes_per_step: 5
+    min_confidence_filter: 0.3
+    repl_timeout: 15
+    max_repl_steps: 5
+
+parallel:
+  enabled: true
+  max_concurrent_entities: 3
+  convergence_min_paths: 2
+  convergence_weight_by_confidence: true
+  async_timeout: 30
+
+vector_store:
+  persist_directory: "outputs/chroma_db"
+  collection_name: "entities_sanity"
+  distance_metric: "cosine"
+  top_k: 5
+
+retrieval:
+  seed_entity_top_k: 3
+  context_max_tokens: 1000
+  dedup_similarity_threshold: 0.92
+
+answer_generation:
+  system_prompt: |
+    You are an expert AI Study Assistant. Answer concisely based on the context provided.
+
+evaluation:
+  metrics:
+    - exact_match
+    - f1
+    - rouge_l
+  track_cost: true
+  track_latency: true
+  track_nodes_visited: true
+
+logging:
+  level: "INFO"
+  format: "json"
+  output_dir: "outputs/logs"

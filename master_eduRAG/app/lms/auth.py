@@ -8,9 +8,25 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User
 
-SECRET_KEY = os.getenv("SUPABASE_JWT_SECRET", "super-secret-local-key")
+import bcrypt
+
+SECRET_KEY = os.getenv("SUPABASE_JWT_SECRET")
+if not SECRET_KEY:
+    raise RuntimeError("SUPABASE_JWT_SECRET environment variable is not set!")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 1 week
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    # bcrypt limits to 72 bytes. Truncating here as fallback.
+    pwd_bytes = plain_password[:72].encode('utf-8')
+    hash_bytes = hashed_password.encode('utf-8')
+    return bcrypt.checkpw(pwd_bytes, hash_bytes)
+
+def get_password_hash(password: str) -> str:
+    pwd_bytes = password[:72].encode('utf-8')
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(pwd_bytes, salt)
+    return hashed.decode('utf-8')
 
 security = HTTPBearer()
 optional_security = HTTPBearer(auto_error=False)

@@ -18,12 +18,13 @@ from pydantic import BaseModel, Field, model_validator
 
 
 class LLMConfig(BaseModel):
-    provider: Literal["ollama", "openai", "anthropic"] = "ollama"
+    provider: Literal["ollama", "groq", "openai", "anthropic", "gemini"] = "ollama"
     model: str = "llama3.2:3b"
     temperature: float = 0.0
     max_tokens: int = 1024
     timeout: int = 120
     ollama_base_url: str = "http://localhost:11434"
+    groq_base_url: str = "https://api.groq.com/openai/v1"
     openai_model: str = "gpt-4o-mini"
     anthropic_model: str = "claude-haiku-4-5-20251001"
 
@@ -57,6 +58,7 @@ class ConfidenceConfig(BaseModel):
     axes: ConfidenceAxesConfig = Field(default_factory=ConfidenceAxesConfig)
     min_confidence_threshold: float = 0.15
     batch_size: int = 8
+    mode: Literal["fast", "balanced", "full"] = "balanced"
 
 
 class LeidenConfig(BaseModel):
@@ -176,10 +178,26 @@ class AppConfig(BaseModel):
     @model_validator(mode="after")
     def resolve_env_vars(self) -> "AppConfig":
         """Override with environment variable values if set."""
+        if os.getenv("RAG_LLM_PROVIDER"):
+            self.llm.provider = os.environ["RAG_LLM_PROVIDER"]  # type: ignore[assignment]
         if os.getenv("LLM_PROVIDER"):
             self.llm.provider = os.environ["LLM_PROVIDER"]  # type: ignore[assignment]
+        if os.getenv("LLM_MODEL"):
+            self.llm.model = os.environ["LLM_MODEL"]
         if os.getenv("OLLAMA_BASE_URL"):
             self.llm.ollama_base_url = os.environ["OLLAMA_BASE_URL"]
+        if os.getenv("GROQ_BASE_URL"):
+            self.llm.groq_base_url = os.environ["GROQ_BASE_URL"]
+        if self.llm.provider == "ollama" and os.getenv("OLLAMA_MODEL"):
+            self.llm.model = os.environ["OLLAMA_MODEL"]
+        if self.llm.provider == "groq" and os.getenv("GROQ_TEXT_MODEL"):
+            self.llm.model = os.environ["GROQ_TEXT_MODEL"]
+        if self.llm.provider == "gemini" and os.getenv("DEFAULT_MODEL"):
+            self.llm.model = os.environ["DEFAULT_MODEL"]
+        if os.getenv("OPENAI_MODEL"):
+            self.llm.openai_model = os.environ["OPENAI_MODEL"]
+        if os.getenv("ANTHROPIC_MODEL"):
+            self.llm.anthropic_model = os.environ["ANTHROPIC_MODEL"]
         return self
 
 

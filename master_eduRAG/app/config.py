@@ -11,10 +11,19 @@ load_dotenv()
 # ── Database ──────────────────────────────────────────────────
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./master_edurag.db")
 
-# ── Gemini (Studymines Vision + EPF) ──────────────────────────
-GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY", "")
-DEFAULT_MODEL = "gemini-3-flash-preview"
-VISION_MODEL = "gemini-3-flash-preview"
+# ── Groq (Cloud Vision & Online Preprocessing) ────────────────
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_TEXT_MODEL  = os.getenv("GROQ_TEXT_MODEL",   "llama-3.3-70b-versatile")
+GROQ_VISION_MODEL = os.getenv("GROQ_VISION_MODEL", "llama-3.2-11b-vision-preview")
+
+# ── Google Gemini (High-Performance Cloud LLM) ───────────────
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
+DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "gemini-2.5-flash")
+VISION_MODEL = os.getenv("VISION_MODEL", "gemini-2.5-flash")
+
+# ── Ollama (Local Reasoning & Generation — Nonstop / No Token Limit) ──
+OLLAMA_BASE_URL  = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL     = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
 
 # ── RLM-GraphRAG LLM ─────────────────────────────────────────
 RAG_LLM_PROVIDER = os.getenv("RAG_LLM_PROVIDER", "ollama")

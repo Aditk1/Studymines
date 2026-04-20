@@ -1,17 +1,15 @@
-import json
-import requests
-import random
 from typing import List, Dict, Optional
 from datetime import datetime
 from sqlalchemy.orm import Session
 from app.models import Upload, QuestionBank, GraphEntity
+from app.llm.epf_generator import EPFGenerator
 from app.llm.utils import clean_json_response
 from app.utils import get_logger
 
 logger = get_logger(__name__)
 
-OLLAMA_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "llama3"
+# Initializing a default generator instance
+_gen = EPFGenerator()
 
 def CognitiveAIGenerator(
     topic: str,
@@ -71,23 +69,16 @@ def CognitiveAIGenerator(
     Do not include any conversational text before or after the JSON.
     """
 
-    # 3. CALL LLM (OLLAMA / LLAMA3)
+    # 3. CALL LLM (GEMINI -> GROQ -> OLLAMA)
     try:
-        response = requests.post(OLLAMA_URL, json={
-            "model": MODEL_NAME,
-            "prompt": prompt,
-            "stream": False
-        }, timeout=120)
-        
-        if response.status_code == 200:
-            result = response.json().get('response', '')
-            # Clean and parse response
-            generated_data = clean_json_response(result)
-            if isinstance(generated_data, list) and len(generated_data) > 0:
-                return generated_data
+        result = _gen._generate_content(prompt)
+        # Clean and parse response
+        generated_data = clean_json_response(result)
+        if isinstance(generated_data, list) and len(generated_data) > 0:
+            return generated_data
                 
     except Exception as e:
-        logger.error(f"Error calling Ollama: {e}")
+        logger.error(f"Generation failed: {e}")
         
     # Fallback to static dummy for demo if LLM is offline or fails to generate valid json
     logger.warning(f"Utilizing fallback (status {response.status_code if 'response' in locals() else 'error'})")

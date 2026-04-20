@@ -48,8 +48,24 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 @router.websocket("/chat/{room_id}")
-async def websocket_endpoint(websocket: WebSocket, room_id: str, db: Session = Depends(get_db)):
-    # Note: In production you'd authenticate the WebSocket connection using tokens passed in query params or headers
+async def websocket_endpoint(websocket: WebSocket, room_id: str, token: str, db: Session = Depends(get_db)):
+    """
+    WebSocket endpoint for real-time chat.
+    Requires a valid JWT token passed as a query parameter (?token=...)
+    """
+    import jwt
+    from app.lms.auth import SECRET_KEY, ALGORITHM
+    
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_aud": False})
+        user_id = payload.get("sub")
+        if not user_id:
+             await websocket.close(code=1008)  # Policy Violation
+             return
+    except Exception:
+        await websocket.close(code=1008)
+        return
+
     await manager.connect(websocket, room_id)
     try:
         print(f"DEBUG_CHAT_WS: Connection stable for room {room_id}")
@@ -58,11 +74,9 @@ async def websocket_endpoint(websocket: WebSocket, room_id: str, db: Session = D
                 data = await websocket.receive_text()
                 print(f"DEBUG_CHAT_WS: Received data from client: {data}")
                 payload = json.loads(data)
-                
-                user_id = payload.get("sender_id")
                 content = payload.get("content")
                 
-                if user_id and content:
+                if content:
                     new_msg = ChatMessage(
                         room_id=room_id,
                         sender_id=user_id,

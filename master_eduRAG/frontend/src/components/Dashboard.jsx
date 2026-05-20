@@ -1,3 +1,6 @@
+/**
+ * Student/teacher dashboard showing artifacts, progress, and quick actions.
+ */
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
@@ -17,6 +20,9 @@ import {
   Trash2
 } from 'lucide-react'
 
+/**
+ * Student/teacher dashboard showing artifacts, progress, and quick actions.
+ */
 export default function Dashboard({ userId, onOpenArtifact, onOpenAssessment }) {
   const navigate = useNavigate()
   const [userData, setUserData] = useState(null)

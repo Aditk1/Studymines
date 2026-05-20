@@ -1,3 +1,6 @@
+/**
+ * Authentication screen for login and signup against the FastAPI auth endpoints.
+ */
 import { useState } from 'react'
 import axios from 'axios'
 import { supabase } from '../supabase'
@@ -13,6 +16,9 @@ import {
   Cpu
 } from 'lucide-react'
 
+/**
+ * Authentication screen for login and signup against the FastAPI auth endpoints.
+ */
 export default function Auth({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true)
   const [loading, setLoading] = useState(false)

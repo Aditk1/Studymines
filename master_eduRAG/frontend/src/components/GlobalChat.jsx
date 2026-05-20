@@ -1,8 +1,14 @@
+/**
+ * Global classroom chat matrix for rooms available to the current user.
+ */
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { MessageSquare, Hash, Users } from 'lucide-react'
 import axios from 'axios'
 
+/**
+ * Global classroom chat matrix for rooms available to the current user.
+ */
 export default function GlobalChat({ user }) {
   const [chats, setChats] = useState([])
   const [loading, setLoading] = useState(true)

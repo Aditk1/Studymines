@@ -1,3 +1,7 @@
+"""
+LMS model package exports.
+"""
+
 from .classroom import Classroom, ClassroomMember
 from .material import LMSMaterial, DocumentChunk
 from .chat import ChatRoom, ChatMessage

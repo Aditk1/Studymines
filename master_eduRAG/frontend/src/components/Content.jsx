@@ -1,3 +1,6 @@
+/**
+ * Personal content library for uploaded and generated learning artifacts.
+ */
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -8,6 +11,9 @@ import {
 } from 'lucide-react'
 import axios from 'axios'
 
+/**
+ * Personal content library for uploaded and generated learning artifacts.
+ */
 export default function Content({ user, onOpenArtifact }) {
   const navigate = useNavigate()
   const [materials, setMaterials] = useState([])

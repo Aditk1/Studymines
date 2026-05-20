@@ -1,3 +1,7 @@
+"""
+Inspect database connectivity and core table availability.
+"""
+
 import os
 import sys
 

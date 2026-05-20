@@ -1,3 +1,7 @@
+"""
+Gemini-based vision extraction helpers for handwritten or image-based learning content.
+"""
+
 import os
 from typing import Dict, Optional
 import json

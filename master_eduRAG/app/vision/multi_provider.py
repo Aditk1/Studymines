@@ -1,3 +1,7 @@
+"""
+Multi-provider OCR and vision extraction pipeline for educational images.
+"""
+
 import os
 import logging
 import base64

@@ -25,6 +25,7 @@ Answer:"""
 
 @dataclass
 class GeneratedAnswer:
+    """Define the GeneratedAnswer data structure or service used by this module."""
     question: str
     answer: str
     context_used: str

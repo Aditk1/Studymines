@@ -1,3 +1,7 @@
+"""
+Research metric aggregation from graph artifacts, database snapshots, and exported evaluations.
+"""
+
 from __future__ import annotations
 
 import json
@@ -16,7 +20,13 @@ from networkx.readwrite import json_graph
 from src.utils.config import load_config
 
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
+import sys
+
+if getattr(sys, 'frozen', False):
+    ROOT_DIR = Path(sys.executable).resolve().parent
+else:
+    ROOT_DIR = Path(__file__).resolve().parent.parent
+
 GRAPH_DIR = ROOT_DIR / "data" / "graphs"
 METRICS_PATH = ROOT_DIR / "outputs" / "research" / "metrics.json"
 SNAPSHOT_PATH = ROOT_DIR / "outputs" / "research_metrics_snapshot.json"
@@ -24,6 +34,7 @@ SNAPSHOT_PATH = ROOT_DIR / "outputs" / "research_metrics_snapshot.json"
 
 @dataclass
 class GraphArtifactMetrics:
+    """Define the GraphArtifactMetrics data structure or service used by this module."""
     artifact: str
     nodes: int
     edges: int
@@ -238,6 +249,7 @@ def _build_snapshot_metrics() -> dict[str, Any]:
 
 
 def get_research_metrics() -> dict[str, Any]:
+    """Handle the get research metrics operation."""
     if METRICS_PATH.exists():
         with METRICS_PATH.open("r", encoding="utf-8") as fh:
             return json.load(fh)
@@ -245,6 +257,7 @@ def get_research_metrics() -> dict[str, Any]:
 
 
 def write_research_snapshot() -> Path:
+    """Handle the write research snapshot operation."""
     snapshot = _build_snapshot_metrics()
     SNAPSHOT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with SNAPSHOT_PATH.open("w", encoding="utf-8") as fh:

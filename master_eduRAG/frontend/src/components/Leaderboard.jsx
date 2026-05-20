@@ -1,3 +1,6 @@
+/**
+ * Ecosystem leaderboard for user uploads and performance scores.
+ */
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { motion } from 'framer-motion'
@@ -9,6 +12,9 @@ import {
   Filter
 } from 'lucide-react'
 
+/**
+ * Ecosystem leaderboard for user uploads and performance scores.
+ */
 export default function Leaderboard() {
   const [leaderboard, setLeaderboard] = useState([])
   const [loading, setLoading] = useState(true)

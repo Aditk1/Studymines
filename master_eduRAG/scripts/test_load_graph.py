@@ -1,3 +1,7 @@
+"""
+Developer smoke script for loading serialized graph artifacts.
+"""
+
 
 import json
 import sys

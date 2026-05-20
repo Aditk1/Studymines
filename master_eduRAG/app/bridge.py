@@ -83,7 +83,10 @@ class RAGBridge:
 
         documents = [(text, source_name)]
         if not save_dir:
-            save_dir = str(PROJECT_ROOT / "data" / "graphs")
+            if getattr(sys, 'frozen', False):
+                save_dir = str(Path("data/graphs").resolve())
+            else:
+                save_dir = str(PROJECT_ROOT / "data" / "graphs")
         os.makedirs(save_dir, exist_ok=True)
 
         graph_filename = f"graph_{uuid.uuid4().hex}_{os.path.splitext(source_name)[0]}.pkl"

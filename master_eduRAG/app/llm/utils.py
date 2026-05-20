@@ -1,3 +1,7 @@
+"""
+Utility helpers for robust LLM JSON parsing and response normalization.
+"""
+
 import json
 import re
 import time

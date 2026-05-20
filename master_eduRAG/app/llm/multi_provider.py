@@ -1,3 +1,7 @@
+"""
+Multi-provider LLM client with ordered fallback across configured cloud/local providers.
+"""
+
 import os
 import time
 import logging

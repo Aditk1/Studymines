@@ -18,6 +18,7 @@ logger = get_logger("llm_client")
 
 @dataclass
 class LLMResponse:
+    """Define the LLMResponse data structure or service used by this module."""
     content: str
     prompt_tokens: int = 0
     completion_tokens: int = 0
@@ -27,6 +28,7 @@ class LLMResponse:
 
 @dataclass
 class CostTracker:
+    """Define the CostTracker data structure or service used by this module."""
     total_prompt_tokens: int = 0
     total_completion_tokens: int = 0
     total_calls: int = 0

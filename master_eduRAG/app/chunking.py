@@ -1,3 +1,7 @@
+"""
+Chunking and map-reduce study package generation helpers for long educational documents.
+"""
+
 import json
 from typing import Dict, List, Optional
 from app.config import CHUNK_SIZE, CHUNK_OVERLAP
@@ -247,6 +251,7 @@ async def chunk_and_process(
     api_key: Optional[str] = None,
     source_name: str = "document_upload",
 ) -> Dict:
+    """Handle the chunk and process operation."""
     study_package = await chunk_and_generate_eps(text, student_level, subject, topic, api_key)
     # This sequential version is only for synchronous tests. Real app uses background tasks.
     from app.bridge import process_with_rag

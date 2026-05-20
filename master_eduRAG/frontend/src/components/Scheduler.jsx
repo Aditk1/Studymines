@@ -1,3 +1,6 @@
+/**
+ * Reminder and schedule management view.
+ */
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
@@ -13,6 +16,9 @@ import {
   CheckCircle
 } from 'lucide-react'
 
+/**
+ * Reminder and schedule management view.
+ */
 export default function Scheduler({ user }) {
   const [reminders, setReminders] = useState([])
   const [loading, setLoading] = useState(true)

@@ -1,3 +1,7 @@
+"""
+Generate research plots from graph artifacts and experiment metrics.
+"""
+
 
 import os
 import sys

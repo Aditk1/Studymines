@@ -1,3 +1,7 @@
+"""
+Database migration helper for evolving the local master_eduRAG schema.
+"""
+
 from sqlalchemy import text
 import sys
 import os

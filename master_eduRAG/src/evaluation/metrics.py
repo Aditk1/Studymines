@@ -17,6 +17,7 @@ logger = get_logger("evaluation")
 
 
 def normalize_answer(text: str) -> str:
+    """Handle the normalize answer operation."""
     text = text.lower()
     text = re.sub(r"\b(a|an|the)\b", " ", text)
     text = "".join(c for c in text if c not in string.punctuation)
@@ -24,10 +25,12 @@ def normalize_answer(text: str) -> str:
 
 
 def exact_match(prediction: str, gold: str) -> float:
+    """Handle the exact match operation."""
     return 1.0 if normalize_answer(prediction) == normalize_answer(gold) else 0.0
 
 
 def token_f1(prediction: str, gold: str) -> float:
+    """Handle the token f1 operation."""
     pred_tokens = normalize_answer(prediction).split()
     gold_tokens = normalize_answer(gold).split()
     if not pred_tokens or not gold_tokens:
@@ -42,6 +45,7 @@ def token_f1(prediction: str, gold: str) -> float:
 
 
 def rouge_l(prediction: str, gold: str) -> float:
+    """Handle the rouge l operation."""
     pred_tokens = normalize_answer(prediction).split()
     gold_tokens = normalize_answer(gold).split()
     if not pred_tokens or not gold_tokens:
@@ -67,6 +71,7 @@ def _lcs_length(a: list[str], b: list[str]) -> int:
 
 
 def evaluate_answer(prediction: str, gold: str) -> dict[str, float]:
+    """Handle the evaluate answer operation."""
     return {
         "exact_match": exact_match(prediction, gold),
         "token_f1": token_f1(prediction, gold),
@@ -76,6 +81,7 @@ def evaluate_answer(prediction: str, gold: str) -> dict[str, float]:
 
 @dataclass
 class QueryResult:
+    """Define the QueryResult data structure or service used by this module."""
     query_id: str
     question: str
     gold_answer: str
@@ -117,6 +123,7 @@ class QueryResult:
 
 
 def aggregate_results(results: list[QueryResult]) -> dict[str, Any]:
+    """Handle the aggregate results operation."""
     if not results:
         return {}
 
@@ -168,6 +175,7 @@ def compute_community_coherence(graph: Any) -> dict[str, float]:
 
 
 def compute_weighted_modularity(graph: Any) -> float:
+    """Handle the compute weighted modularity operation."""
     try:
         import networkx as nx
         from networkx.algorithms.community.quality import modularity
@@ -192,6 +200,7 @@ def compute_weighted_modularity(graph: Any) -> float:
 
 @dataclass
 class GraphQualityReport:
+    """Define the GraphQualityReport data structure or service used by this module."""
     strategy: str
     num_nodes: int
     num_edges: int
@@ -213,6 +222,7 @@ class GraphQualityReport:
 
 
 def evaluate_graph_quality(graph: Any, strategy_name: str) -> GraphQualityReport:
+    """Handle the evaluate graph quality operation."""
     stats = graph.summary()
     coherence = compute_community_coherence(graph)
     mod = compute_weighted_modularity(graph)

@@ -1,3 +1,7 @@
+"""
+Provider client package for Gemini, Groq, and Ollama integrations.
+"""
+
 from app.clients.groq_client import (
     GroqClient,
     configure_groq,

@@ -1,3 +1,6 @@
+/**
+ * Assessment-taking view for rendering questions and submitting responses.
+ */
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -14,6 +17,9 @@ import {
 
 import { useParams, useNavigate } from 'react-router-dom'
 
+/**
+ * Assessment-taking view for rendering questions and submitting responses.
+ */
 export default function AssessmentView({ assessmentId: propAssessmentId, userId, onBack: propOnBack }) {
   const { id } = useParams()
   const navigate = useNavigate()

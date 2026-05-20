@@ -1,3 +1,7 @@
+"""
+Educational package field generator for summaries, concepts, flashcards, and questions.
+"""
+
 from typing import Dict, List, Optional
 from app.config import OLLAMA_MODEL, GOOGLE_API_KEY, GROQ_API_KEY
 from app.clients import ollama_generate

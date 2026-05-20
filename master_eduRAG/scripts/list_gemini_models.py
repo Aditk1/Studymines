@@ -1,3 +1,7 @@
+"""
+List available Gemini models for the configured Google API key.
+"""
+
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv

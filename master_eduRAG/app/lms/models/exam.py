@@ -1,3 +1,7 @@
+"""
+SQLAlchemy models for exams, classroom exam assignment, and exam submissions.
+"""
+
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint, JSON
@@ -6,6 +10,7 @@ from sqlalchemy.orm import relationship
 from app.database import Base
 
 class Exam(Base):
+    """Define the Exam data structure or service used by this module."""
     __tablename__ = "lms_exams"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -24,6 +29,7 @@ class Exam(Base):
     submissions = relationship("ExamSubmission", back_populates="exam", cascade="all, delete-orphan")
 
 class ExamClassroom(Base):
+    """Define the ExamClassroom data structure or service used by this module."""
     __tablename__ = "lms_exam_classrooms"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -37,6 +43,7 @@ class ExamClassroom(Base):
     exam = relationship("Exam", back_populates="classroom_links")
 
 class ExamSubmission(Base):
+    """Define the ExamSubmission data structure or service used by this module."""
     __tablename__ = "lms_exam_submissions"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))

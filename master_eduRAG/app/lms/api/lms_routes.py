@@ -1,3 +1,7 @@
+"""
+Core LMS API routes for classrooms, materials, courses, assessments, reminders, members, and learning paths.
+"""
+
 import secrets
 import shutil
 import os
@@ -89,14 +93,17 @@ async def get_chat_history(
 # --- Schemas ---
 
 class ClassroomBase(BaseModel):
+    """Define the ClassroomBase data structure or service used by this module."""
     name: str
     description: Optional[str] = None
     subject: Optional[str] = None
 
 class ClassroomCreate(ClassroomBase):
+    """Define the ClassroomCreate data structure or service used by this module."""
     pass
 
 class ClassroomResponse(ClassroomBase):
+    """Define the ClassroomResponse data structure or service used by this module."""
     id: str
     code: str
     created_by: UUID
@@ -164,6 +171,7 @@ async def list_classrooms(
     return classrooms
 
 class JoinRequest(BaseModel):
+    """Define the JoinRequest data structure or service used by this module."""
     code: str
 
 @router.post("/classrooms/join")
@@ -172,6 +180,7 @@ async def join_classroom(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user)
 ):
+    """Handle the join classroom operation."""
     classroom = db.query(Classroom).filter(Classroom.code == req.code).first()
     if not classroom:
         raise HTTPException(status_code=404, detail="Invalid classroom code")
@@ -200,6 +209,7 @@ async def get_classroom_requests(
     db: Session = Depends(get_db),
     user: User = Depends(require_role(["teacher", "admin"]))
 ):
+    """Handle the get classroom requests operation."""
     member = db.query(ClassroomMember).filter(
         ClassroomMember.classroom_id == classroom_id,
         ClassroomMember.user_id == user.id,
@@ -254,6 +264,7 @@ async def approve_join_request(
     db: Session = Depends(get_db),
     user: User = Depends(require_role(["teacher", "admin"]))
 ):
+    """Handle the approve join request operation."""
     member = db.query(ClassroomMember).filter(
         ClassroomMember.classroom_id == classroom_id,
         ClassroomMember.user_id == user.id,
@@ -403,6 +414,7 @@ async def list_materials(
 # ═══════════════════════════════════════════════════════════════
 
 class CourseCreate(BaseModel):
+    """Define the CourseCreate data structure or service used by this module."""
     title: str
     description: Optional[str] = None
     subject: Optional[str] = None
@@ -443,6 +455,7 @@ async def list_courses_consolidated(
 
 
 class SectionCreate(BaseModel):
+    """Define the SectionCreate data structure or service used by this module."""
     title: str
     order: Optional[int] = 0
     summary: Optional[str] = None
@@ -467,6 +480,7 @@ async def create_section(
     return {"success": True, "section_id": section.id}
 
 class ModuleCreate(BaseModel):
+    """Define the ModuleCreate data structure or service used by this module."""
     title: str
     content_type: str
     order: Optional[int] = 0
@@ -495,6 +509,7 @@ async def create_module(
 
 
 class EventCreate(BaseModel):
+    """Define the EventCreate data structure or service used by this module."""
     event_type: str
     path: Optional[str] = None
     metadata: Optional[dict] = None
@@ -647,6 +662,7 @@ async def get_reminders(
     ]
 
 class ReminderCreate(BaseModel):
+    """Define the ReminderCreate data structure or service used by this module."""
     title: str
     due_at: datetime
     reminder_type: Optional[str] = "task"
@@ -704,6 +720,7 @@ async def auto_generate_quiz_from_text(
     db.commit()
     return {"success": True, "count": len(new_q_ids), "question_ids": new_q_ids}
 class UniversalExamCreate(BaseModel):
+    """Define the UniversalExamCreate data structure or service used by this module."""
     title: str
     course_id: Optional[int] = None
     classroom_id: Optional[str] = None
@@ -713,6 +730,7 @@ class UniversalExamCreate(BaseModel):
     context_type: str = "general" # 'general', 'document', 'mastery'
 
 def background_generate_exam(exam_id: int, topic: str, context_type: str, num_questions: int, difficulty: str):
+    """Handle the background generate exam operation."""
     from app.database import SessionLocal
     import traceback
     db = SessionLocal()
@@ -789,6 +807,7 @@ async def generate_universal_exam(
 
 
 class AssessmentSubmission(BaseModel):
+    """Define the AssessmentSubmission data structure or service used by this module."""
     responses: dict
     time_spent: Optional[int] = None
 
@@ -976,13 +995,19 @@ async def get_all_assignments(db: Session = Depends(get_db), user: User = Depend
 
 
 @router.get("/stats/heatmap", tags=["Analytics"])
-async def get_cognitive_heatmap(db: Session = Depends(get_db)):
+async def get_cognitive_heatmap(user_id: Optional[UUID] = None, db: Session = Depends(get_db)):
     """Aggregate mastery data by concept to show high-struggle areas."""
-    concepts = db.query(
+    query = db.query(
         GraphEntity.entity_name,
         func.avg(GraphEntity.mastery_score).label("avg_mastery"),
         func.count(GraphEntity.id).label("mentions")
-    ).group_by(GraphEntity.entity_name).limit(10).all()
+    )
+    if user_id:
+        # Join with Upload to filter by user_id
+        from app.models import Upload
+        query = query.join(Upload).filter(Upload.user_id == user_id)
+        
+    concepts = query.group_by(GraphEntity.entity_name).limit(10).all()
     
     return [
         {
@@ -995,11 +1020,21 @@ async def get_cognitive_heatmap(db: Session = Depends(get_db)):
     ]
 
 @router.get("/stats/kpis", tags=["Analytics"])
-async def get_analytics_kpis(db: Session = Depends(get_db)):
+async def get_analytics_kpis(user_id: Optional[UUID] = None, db: Session = Depends(get_db)):
     """Core metrics for the analytics dashboard."""
-    concept_count = db.query(GraphEntity).count()
-    global_mastery = db.query(func.avg(GraphEntity.mastery_score)).scalar() or 0.72
-    high_struggle = db.query(GraphEntity).filter(GraphEntity.mastery_score < 0.4).count()
+    base_query = db.query(GraphEntity)
+    if user_id:
+        from app.models import Upload
+        base_query = base_query.join(Upload).filter(Upload.user_id == user_id)
+        
+    concept_count = base_query.count()
+    
+    if user_id:
+        global_mastery = db.query(func.avg(GraphEntity.mastery_score)).join(Upload, GraphEntity.upload_id == Upload.id).filter(Upload.user_id == user_id).scalar() or 0.72
+        high_struggle = base_query.filter(GraphEntity.mastery_score < 0.4).count()
+    else:
+        global_mastery = db.query(func.avg(GraphEntity.mastery_score)).scalar() or 0.72
+        high_struggle = db.query(GraphEntity).filter(GraphEntity.mastery_score < 0.4).count()
     
     return {
         "concepts_monitored": concept_count,
@@ -1133,6 +1168,7 @@ async def publish_course_architecture(
     return {"success": True, "message": f"Course '{course.title}' published successfully."}
 
 class AIArchitectRequest(BaseModel):
+    """Define the AIArchitectRequest data structure or service used by this module."""
     artifact_id: int # Upload ID
 
 @router.post("/studio/ai-architect/{course_id}", tags=["Studio"])

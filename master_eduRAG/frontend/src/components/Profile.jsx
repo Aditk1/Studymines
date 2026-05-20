@@ -1,3 +1,6 @@
+/**
+ * Profile page for account details, local session actions, and logout.
+ */
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { motion } from 'framer-motion'
@@ -14,6 +17,9 @@ import {
   BarChart2
 } from 'lucide-react'
 
+/**
+ * Profile page for account details, local session actions, and logout.
+ */
 export default function Profile({ user, onUpdate, onLogout }) {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)

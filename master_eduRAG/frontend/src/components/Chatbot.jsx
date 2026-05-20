@@ -1,9 +1,15 @@
+/**
+ * Graph-grounded chatbot panel for asking questions about an artifact.
+ */
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, X, Send, Bot, User, Loader2, Sparkles, BrainCircuit, Layers } from 'lucide-react'
 import axios from 'axios'
 import ReactMarkdown from 'react-markdown'
 
+/**
+ * Graph-grounded chatbot panel for asking questions about an artifact.
+ */
 export default function Chatbot({ user, uploadId }) {
   const [isOpen, setIsOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)

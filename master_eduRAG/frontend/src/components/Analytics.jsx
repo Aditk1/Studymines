@@ -1,3 +1,6 @@
+/**
+ * Analytics dashboard for cognitive KPIs, heatmaps, and learning recommendations.
+ */
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { TrendingUp, Users, Brain, AlertTriangle, ArrowLeft } from 'lucide-react'
@@ -5,6 +8,9 @@ import axios from 'axios'
 
 import { useSearchParams } from 'react-router-dom'
 
+/**
+ * Analytics dashboard for cognitive KPIs, heatmaps, and learning recommendations.
+ */
 export default function Analytics({ user, onBack }) {
   const [searchParams] = useSearchParams()
   const filterUserId = searchParams.get('user_id')
@@ -17,10 +23,12 @@ export default function Analytics({ user, onBack }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const targetUserId = filterUserId || (user?.role === 'student' ? user?.id : null)
+        const queryParam = targetUserId ? `?user_id=${targetUserId}` : ''
         const [heatmapRes, kpiRes, riskRes] = await Promise.all([
-            axios.get('/api/v1/lms/stats/heatmap'),
-            axios.get('/api/v1/lms/stats/kpis'),
-            axios.get('/api/v1/lms/risk-flags')
+            axios.get(`/api/v1/lms/stats/heatmap${queryParam}`).catch(() => ({ data: [] })),
+            axios.get(`/api/v1/lms/stats/kpis${queryParam}`).catch(() => ({ data: { concepts_monitored: 0, global_mastery_pct: 0, high_struggle_count: 0 } })),
+            axios.get(`/api/v1/lms/risk-flags${queryParam}`).catch(() => ({ data: [] }))
         ])
         
         setHeatmapData(heatmapRes.data)

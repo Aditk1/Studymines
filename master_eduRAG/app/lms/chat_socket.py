@@ -1,3 +1,7 @@
+"""
+WebSocket chat router for classroom communication and persisted message broadcasts.
+"""
+
 import json
 from typing import Dict, List, Set
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
@@ -9,6 +13,7 @@ from app.lms.auth import get_current_user
 router = APIRouter(prefix="/ws", tags=["WebSockets"])
 
 class ConnectionManager:
+    """Define the ConnectionManager data structure or service used by this module."""
     def __init__(self):
         # room_id -> set of active WebSockets
         self.active_connections: dict[str, set[WebSocket]] = {}

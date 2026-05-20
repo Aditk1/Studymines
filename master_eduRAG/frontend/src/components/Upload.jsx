@@ -1,3 +1,6 @@
+/**
+ * Upload workflow for documents/images and stage-one study package creation.
+ */
 import { useState, useRef } from 'react'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -15,6 +18,9 @@ import {
   Library
 } from 'lucide-react'
 
+/**
+ * Upload workflow for documents/images and stage-one study package creation.
+ */
 export default function Upload({ userId, onOpenArtifact }) {
   const [uploadType, setUploadType] = useState('document')
   const [file, setFile] = useState(null)

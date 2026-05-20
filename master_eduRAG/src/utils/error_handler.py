@@ -13,6 +13,7 @@ T = TypeVar("T")
 
 # ANSI escape codes for premium CLI aesthetics
 class Colors:
+    """Define the Colors data structure or service used by this module."""
     HEADER = '\033[95m'
     BLUE = '\033[94m'
     CYAN = '\033[96m'

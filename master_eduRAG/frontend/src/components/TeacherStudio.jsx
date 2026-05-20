@@ -1,3 +1,6 @@
+/**
+ * Teacher course and assessment authoring studio.
+ */
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -21,6 +24,9 @@ const normalizeCourse = (course) => ({
   sections: course?.sections || [],
 })
 
+/**
+ * Teacher course and assessment authoring studio.
+ */
 export default function TeacherStudio({ user }) {
   const [courses, setCourses] = useState([])
   const [loading, setLoading] = useState(true)

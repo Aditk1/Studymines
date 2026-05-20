@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field, model_validator
 
 
 class LLMConfig(BaseModel):
+    """Define the LLMConfig data structure or service used by this module."""
     provider: Literal["ollama", "groq", "openai", "anthropic", "gemini"] = "ollama"
     model: str = "llama3.2:3b"
     temperature: float = 0.0
@@ -30,6 +31,7 @@ class LLMConfig(BaseModel):
 
 
 class EmbeddingsConfig(BaseModel):
+    """Define the EmbeddingsConfig data structure or service used by this module."""
     model: str = "sentence-transformers/all-MiniLM-L6-v2"
     device: str = "cuda"
     batch_size: int = 32
@@ -37,6 +39,7 @@ class EmbeddingsConfig(BaseModel):
 
 
 class IngestionConfig(BaseModel):
+    """Define the IngestionConfig data structure or service used by this module."""
     chunk_size: int = 512
     chunk_overlap: int = 64
     extractor: Literal["rebel", "spacy", "llm"] = "rebel"
@@ -48,12 +51,14 @@ class IngestionConfig(BaseModel):
 
 
 class ConfidenceAxesConfig(BaseModel):
+    """Define the ConfidenceAxesConfig data structure or service used by this module."""
     factual_weight: float = 0.40
     specificity_weight: float = 0.35
     coherence_weight: float = 0.25
 
 
 class ConfidenceConfig(BaseModel):
+    """Define the ConfidenceConfig data structure or service used by this module."""
     enabled: bool = True
     axes: ConfidenceAxesConfig = Field(default_factory=ConfidenceAxesConfig)
     min_confidence_threshold: float = 0.15
@@ -62,12 +67,14 @@ class ConfidenceConfig(BaseModel):
 
 
 class LeidenConfig(BaseModel):
+    """Define the LeidenConfig data structure or service used by this module."""
     resolution: float = 1.0
     n_iterations: int = 10
     seed: int = 42
 
 
 class CWLeidenConfig(BaseModel):
+    """Define the CWLeidenConfig data structure or service used by this module."""
     resolution: float = 1.0
     n_iterations: int = 10
     seed: int = 42
@@ -75,11 +82,13 @@ class CWLeidenConfig(BaseModel):
 
 
 class RLMCommunityConfig(BaseModel):
+    """Define the RLMCommunityConfig data structure or service used by this module."""
     max_entities_per_call: int = 20
     similarity_threshold: float = 0.6
 
 
 class CommunityConfig(BaseModel):
+    """Define the CommunityConfig data structure or service used by this module."""
     strategy: Literal["leiden", "cw_leiden", "rlm_community"] = "cw_leiden"
     leiden: LeidenConfig = Field(default_factory=LeidenConfig)
     cw_leiden: CWLeidenConfig = Field(default_factory=CWLeidenConfig)
@@ -87,10 +96,12 @@ class CommunityConfig(BaseModel):
 
 
 class FixedHopConfig(BaseModel):
+    """Define the FixedHopConfig data structure or service used by this module."""
     k: int = 3
 
 
 class RLMTraversalConfig(BaseModel):
+    """Define the RLMTraversalConfig data structure or service used by this module."""
     max_depth: int = 5
     max_nodes_per_step: int = 10
     min_confidence_filter: float = 0.3
@@ -99,12 +110,14 @@ class RLMTraversalConfig(BaseModel):
 
 
 class TraversalConfig(BaseModel):
+    """Define the TraversalConfig data structure or service used by this module."""
     strategy: Literal["fixed_hop", "rlm"] = "rlm"
     fixed_hop: FixedHopConfig = Field(default_factory=FixedHopConfig)
     rlm: RLMTraversalConfig = Field(default_factory=RLMTraversalConfig)
 
 
 class ParallelConfig(BaseModel):
+    """Define the ParallelConfig data structure or service used by this module."""
     enabled: bool = True
     max_concurrent_entities: int = 5
     convergence_min_paths: int = 2
@@ -113,6 +126,7 @@ class ParallelConfig(BaseModel):
 
 
 class VectorStoreConfig(BaseModel):
+    """Define the VectorStoreConfig data structure or service used by this module."""
     persist_directory: str = "outputs/chroma_db"
     collection_name: str = "entities"
     distance_metric: str = "cosine"
@@ -120,12 +134,14 @@ class VectorStoreConfig(BaseModel):
 
 
 class RetrievalConfig(BaseModel):
+    """Define the RetrievalConfig data structure or service used by this module."""
     seed_entity_top_k: int = 5
     context_max_tokens: int = 3000
     dedup_similarity_threshold: float = 0.92
 
 
 class AnswerGenerationConfig(BaseModel):
+    """Define the AnswerGenerationConfig data structure or service used by this module."""
     system_prompt: str = (
         "You are a precise question-answering system. Answer based ONLY on the "
         "provided context. If the answer is not in the context, say 'Not found.' "
@@ -134,6 +150,7 @@ class AnswerGenerationConfig(BaseModel):
 
 
 class EvaluationConfig(BaseModel):
+    """Define the EvaluationConfig data structure or service used by this module."""
     metrics: list[str] = Field(default_factory=lambda: ["exact_match", "f1", "rouge_l"])
     track_cost: bool = True
     track_latency: bool = True
@@ -141,12 +158,14 @@ class EvaluationConfig(BaseModel):
 
 
 class LoggingConfig(BaseModel):
+    """Define the LoggingConfig data structure or service used by this module."""
     level: str = "INFO"
     format: str = "json"
     output_dir: str = "outputs/logs"
 
 
 class ProjectConfig(BaseModel):
+    """Define the ProjectConfig data structure or service used by this module."""
     name: str = "rlm_graphrag"
     version: str = "1.0.0"
     seed: int = 42
@@ -158,6 +177,7 @@ class ProjectConfig(BaseModel):
 
 
 class AppConfig(BaseModel):
+    """Define the AppConfig data structure or service used by this module."""
     project: ProjectConfig = Field(default_factory=ProjectConfig)
     variant_name: str = "base"
     use_graph: bool = True

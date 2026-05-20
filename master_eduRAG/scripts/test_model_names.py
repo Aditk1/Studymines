@@ -1,3 +1,7 @@
+"""
+Developer smoke script for validating configured model names.
+"""
+
 import os
 import google.generativeai as genai
 from dotenv import load_dotenv

@@ -1,3 +1,6 @@
+/**
+ * Classroom detail workspace for materials, members, requests, and discussions.
+ */
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -8,6 +11,9 @@ import {
 } from 'lucide-react'
 import AssessmentView from './AssessmentView'
 
+/**
+ * Classroom detail workspace for materials, members, requests, and discussions.
+ */
 export default function ClassroomDetail({ classroomId, user, onBack, onOpenArtifact }) {
   const [activeTab, setActiveTab] = useState('materials') // 'materials', 'chat', 'exams', 'approvals'
   const [messages, setMessages] = useState([])

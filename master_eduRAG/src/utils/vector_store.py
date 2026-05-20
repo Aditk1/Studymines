@@ -18,6 +18,7 @@ logger = get_logger("vector_store")
 
 @dataclass
 class SearchResult:
+    """Define the SearchResult data structure or service used by this module."""
     entity_id: str
     entity_label: str
     score: float

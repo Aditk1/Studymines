@@ -1,216 +1,135 @@
-# 🧠 master_eduRAG — Cognitive Learning System
+# master_eduRAG
 
-> **Studymines × RLM-GraphRAG** — A unified, AI-powered educational platform that combines adaptive study-package generation with confidence-weighted knowledge graph reasoning.
+master_eduRAG is a unified educational RAG platform that combines Studymines-style adaptive study package generation with an RLM-GraphRAG cognitive core. Students and teachers can upload documents or images, generate summaries/flashcards/questions, build knowledge graph artifacts, ask graph-grounded questions, manage classrooms, create course structures, assign assessments, and inspect mastery/risk analytics.
 
----
+Live demo: <!-- TODO: verify --> `https://example.com/master-edurag`
 
-## 🏗️ Architecture
+## Tech Stack
 
-```
-master_eduRAG/
-├── app/                          ← Unified FastAPI Backend
-│   ├── main.py                   ← Entry point (all endpoints)
-│   ├── config.py                 ← Merged configuration
-│   ├── database.py               ← SQLAlchemy setup
-│   ├── models.py                 ← User, Upload, Performance, GraphEntity
-│   ├── bridge.py                 ← 🔌 RAG Bridge (Studymines ↔ GraphRAG)
-│   ├── chunking.py               ← Document chunking + map-reduce
-│   ├── preprocessing.py          ← Text cleaning & normalisation
-│   ├── segregation.py            ← Subject/topic classification
-│   ├── parsers/                  ← PDF, PPTX, DOCX, TXT parsers
-│   ├── vision/                   ← Gemini Vision OCR (SAEOCR)
-│   └── llm/                      ← EPF generator + retry utilities
-├── rag_engine/                   ← RLM-GraphRAG Core (ported from src/)
-│   ├── pipeline.py               ← Full ingest + query pipeline
-│   ├── ingestion/                ← Triple extraction, confidence scoring
-│   ├── graph/                    ← KnowledgeGraph (NetworkX)
-│   ├── community/                ← Leiden / CW-Leiden detection
-│   ├── traversal/                ← Fixed-hop & RLM REPL traversers
-│   ├── retrieval/                ← Seed linking, context assembly
-│   └── utils/                    ← LLM client, embeddings, logger
-├── config/                       ← YAML configs (base.yaml, variants)
-├── data/                         ← Runtime storage
-│   ├── graphs/                   ← Persisted .pkl graph files
-│   ├── chroma_db/                ← ChromaDB vector store
-│   └── uploads/                  ← Temp upload storage
-├── requirements.txt              ← Merged dependencies
-├── .env.example                  ← Environment template
-└── README.md                     ← This file
+- Backend: FastAPI `>=0.110`, Uvicorn, SQLAlchemy `>=2.0`, PyJWT, bcrypt/passlib
+- Database: SQLite by default, PostgreSQL via `DATABASE_URL`
+- Frontend: React `18.2`, Vite `8`, React Router `7`, axios, Tailwind CSS `3.3`, Framer Motion, lucide-react
+- AI/ML: Google Generative AI, Groq, Ollama, OpenAI, Anthropic, Cerebras, Torch, Transformers, sentence-transformers, spaCy
+- Graph/vector: NetworkX `>=3.2`, ChromaDB, cdlib/leidenalg/igraph
+- Parsing/OCR: PyMuPDF, python-docx, python-pptx, marker-pdf, docling, OpenCV, Pillow, PaddleOCR
+- Testing: pytest, pytest-asyncio, Vitest, React Testing Library
+
+## Architecture
+
+The React frontend talks to a single FastAPI backend over `/api/v1` and websocket chat routes. FastAPI persists relational data with SQLAlchemy, stores files under `data/uploads`, and sends extracted text through parsing, study package generation, and GraphRAG enrichment.
+
+```mermaid
+flowchart LR
+  Browser[React/Vite frontend] --> API[FastAPI backend]
+  API --> DB[(SQLite/PostgreSQL)]
+  API --> Study[Study package pipeline]
+  API --> RAG[RLM-GraphRAG]
+  Study --> LLMs[LLM and vision providers]
+  RAG --> KG[NetworkX graph artifacts]
+  RAG --> Vector[(Chroma vector store)]
 ```
 
----
+Full diagram: [docs/diagrams/architecture.md](docs/diagrams/architecture.md).
 
-## 🚀 Quick Start
+## Prerequisites
 
-### 1. Backend Setup
-```bash
-cd master_eduRAG
+- Python 3.11+
+- Node.js and npm
+- Optional Ollama for local RAG generation
+- Provider API keys for any cloud LLM/OCR path you enable
+
+## Environment Setup
+
+Copy `.env.example` to `.env` and set real values.
+
+| Name | Description | Required | Example |
+|---|---|---:|---|
+| `SUPABASE_JWT_SECRET` | JWT signing secret used by backend auth | Yes | `dev-secret-change-me` |
+| `DATABASE_URL` | SQLAlchemy database URL | No | `sqlite:///./master_edurag.db` |
+| `GOOGLE_API_KEY` | Gemini text/vision key | For Gemini flows | `AIza...` |
+| `GROQ_API_KEY` | Groq text/vision key | For Groq flows | `gsk_...` |
+| `CEREBRAS_API_KEY` | Cerebras key | Optional | `...` |
+| `OPENROUTER_API_KEY` | OpenRouter key | Optional | `...` |
+| `OPENAI_API_KEY` | OpenAI key for research pipeline variants | Optional | `sk-...` |
+| `ANTHROPIC_API_KEY` | Anthropic key for research pipeline variants | Optional | `sk-ant-...` |
+| `RAG_LLM_PROVIDER` | GraphRAG provider | No | `ollama` |
+| `OLLAMA_BASE_URL` | Ollama endpoint | No | `http://localhost:11434` |
+| `OLLAMA_MODEL` | Ollama model | No | `llama3.2:3b` |
+| `GROQ_TEXT_MODEL` | Groq text model override | No | `llama-3.3-70b-versatile` |
+| `GROQ_VISION_MODEL` | Groq vision model override | No | `llama-3.2-11b-vision-preview` |
+| `DEFAULT_MODEL` | Gemini text model | No | `gemini-2.5-flash` |
+| `VISION_MODEL` | Gemini vision model | No | `gemini-2.5-flash` |
+| `MAX_FILE_SIZE` | Document upload max bytes | No | `52428800` |
+| `MAX_IMAGE_SIZE` | Image upload max bytes | No | `10485760` |
+| `DEBUG` | Enable debug config paths | No | `False` |
+| `VITE_SUPABASE_URL` | Supabase URL for frontend client | Optional | `https://project.supabase.co` |
+| `VITE_SUPABASE_ANON_KEY` | Supabase anon key for frontend client | Optional | `eyJ...` |
+
+## Install And Run
+
+Backend:
+
+```powershell
 python -m venv venv
-# Windows: venv\Scripts\activate
-# Linux/Mac: source venv/bin/activate
+.\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-python -m spacy download en_core_web_lg
+$env:SUPABASE_JWT_SECRET="dev-secret-change-me"
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-### 2. Frontend Setup
-```bash
+Frontend:
+
+```powershell
 cd frontend
 npm install
 npm run dev
 ```
 
-### 3. LLM Setup (Ollama + Llama 3)
-Ensure Ollama is running (check your system tray or run `ollama serve`). Then pull the model used by the chatbot:
-```bash
-ollama pull llama3.2:3b
+Open `http://localhost:3000`.
+
+## API Reference
+
+See [docs/API_REFERENCE.md](docs/API_REFERENCE.md) and [docs/diagrams/api.md](docs/diagrams/api.md).
+
+## Folder Structure
+
+| Path | Purpose |
+|---|---|
+| `app/` | FastAPI app, SQLAlchemy models, auth, LMS APIs, document/image processing, LLM adapters |
+| `src/` | RLM-GraphRAG research pipeline: ingestion, graph, confidence, community, traversal, retrieval, evaluation |
+| `frontend/` | React/Vite UI and component tests |
+| `config/` | YAML pipeline configs, datasets, baselines, ablations, and weight variants |
+| `scripts/` | Research, diagnostics, graph building, plotting, migration, and setup helpers |
+| `tests/` | Backend/unit/integration tests and fixtures |
+| `docs/` | Architecture, API, data model, setup, testing, deployment, and diagram docs |
+| `data/` | Runtime uploads, graph artifacts, and SQLite data |
+| `outputs/` | Runtime logs, metrics, plots, audits, and Chroma store |
+| `paper finalization/` | Research paper and experiment artifacts |
+
+## Running Tests
+
+Backend:
+
+```powershell
+pytest
 ```
 
-### 4. Configure
-```bash
-# In master_eduRAG folder:
-copy .env.example .env
-# Edit .env with your GOOGLE_API_KEY (for Vision/SAEOCR features)
+Frontend:
+
+```powershell
+cd frontend
+npm install
+npm test
 ```
 
-### 5. Run
-**Backend:**
-```bash
-uvicorn app.main:app --reload --port 8000
-```
-**Frontend:**
-```bash
-npm run dev   # in the frontend directory
-```
+## Deployment
 
-### 6. Interactive Interface
-- **App**: `http://localhost:5173`
-- **API Docs**: `http://localhost:8000/docs`
+No platform manifest is present. Deploy the backend as an ASGI service with `uvicorn app.main:app`, provision PostgreSQL through `DATABASE_URL`, set secrets, and provide persistent storage for uploads/graphs/outputs. Build the frontend with `npm run build` and serve `frontend/dist`, proxying `/api` and websocket traffic to the backend. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
----
+## Contributing
 
-## 🤖 Cognitive Consultant (Chatbot)
+Use small branches, keep generated/vendor artifacts out of commits, add tests for behavioral changes, and document new routes/models in `docs/API_REFERENCE.md` and `docs/DATA_MODELS.md`. Never commit real `.env` secrets.
 
-The system now includes a global **Cognitive Consultant** chatbot (accessible via the floating brain icon) that:
-1.  **Context-Aware**: Automatically links to the document you are currently studying.
-2.  **Graph-Grounded**: Uses the RLM-GraphRAG C3/C4 traversal to find multi-hop answers.
-3.  **Local inference**: Powered by Llama 3 via Ollama for privacy and high performance.
+## License
 
----
-
----
-
-## 🔌 Core Integration: The RAG Bridge
-
-The `app/bridge.py` module is the heart of the integration:
-
-1. **Ingest**: When a document is uploaded, the bridge sends extracted text to the RLM-GraphRAG pipeline for triple extraction, confidence scoring, and graph construction.
-2. **Enrich**: Study packages (flashcards, concepts, questions) are enriched with graph metadata and confidence labels.
-3. **Query**: Students can ask multi-hop questions that traverse the Knowledge Graph for cross-document reasoning.
-
----
-
-## 📡 API Endpoints
-
-### Studymines (Adaptive Learning)
-| Method | Endpoint | Purpose |
-|:---|:---|:---|
-| `POST` | `/api/v1/upload/document` | Upload PDF/PPTX/DOCX → study package |
-| `POST` | `/api/v1/upload/image` | Upload image → OCR → study package |
-| `POST` | `/api/v1/auth/signup` | Register a new user |
-| `POST` | `/api/v1/auth/login` | Login |
-| `GET` | `/api/v1/users/{id}` | User dashboard |
-| `GET` | `/api/v1/leaderboard` | Top performers |
-| `POST` | `/api/v1/performance` | Record quiz score |
-
-### RLM-GraphRAG (Knowledge Graph)
-| Method | Endpoint | Purpose |
-|:---|:---|:---|
-| `POST` | `/api/v1/graph/query` | Multi-hop QA over Knowledge Graph |
-| `POST` | `/api/v1/graph/chat` | Chatbot specific endpoint (alias for query) |
-| `GET` | `/api/v1/graph/view/{upload_id}` | Graph metadata for an upload |
-| `GET` | `/api/v1/graph/entities?upload_id=N` | List extracted entities |
-
----
-
-## 🛡️ Multi-Provider Migration (Internalized)
-
-To avoid Gemini rate-limits and optimize costs, the system has been migrated to a tiered multi-layered fallback architecture:
-
-1. **Local-First Extraction**:
-   - **PyMuPDF**: For standard PDFs.
-   - **Marker**: For structured educational materials.
-   - **Docling**: For complex/image-heavy documents.
-   - **PaddleOCR / TrOCR**: Local OCR for printed and handwritten images.
-
-2. **Cloud LLM Chain**:
-   - **Groq (Llama 3.3 70B)**: Primary for high-speed synthesis.
-   - **Cerebras (Llama 3.1 8B)**: Extremely fast secondary fallback.
-   - **Gemini 2.0 Flash**: Third-tier reasoning and vision.
-   - **OpenRouter (DeepSeek Free)**: Final cloud fallback.
-   - **Ollama**: Absolute local fallback (no API).
-
----
-
-## 🛠️ Tech Stack
-
-- **Backend**: FastAPI + SQLAlchemy + Uvicorn
-- **Extraction**: PyMuPDF + Marker + Docling (Local)
-- **Vision**: PaddleOCR + TrOCR (Local) + Groq/Gemini Vision (Cloud)
-- **Graph**: NetworkX + CDLib + Leiden
-- **Vector**: ChromaDB + Sentence-Transformers
-- **LLM**: Groq / Cerebras / Gemini / OpenRouter / Ollama
-- **Evaluation**: ROUGE, BERTScore, Token F1, CER (OCR)
-
----
-
-## 🔬 Experimental Validation & Benchmarking
-
-The system includes a comprehensive suite for validating RAG performance and OCR accuracy.
-
-### 📈 Ablation Pipeline
-We evaluate the impact of each "Cognitive Layer" (C1-C4) using standardized RAG benchmarks.
-Available configurations in `config/variants/`:
-- `baseline.yaml`: Naive RAG (Vector only)
-- `plus_c1.yaml`: Knowledge Graph enrichment
-- `plus_c1_c2.yaml`: Confidence-weighted retrieval
-- `plus_c1_c2_c3.yaml`: Multi-hop community traversal
-- `full_edurag.yaml`: Complete tiered pipeline
-
-**Run a sanity check:**
-```bash
-python -m scripts.run_experiment --config config/sanity.yaml --dataset custom_qa --variant full_edurag --limit 5
-```
-
-### 📸 OCR Benchmarking
-Evaluate internal VisionExtractor (SAEOCR) against industry standards like Tesseract.
-```bash
-python -m scripts.ocr_benchmark \
-    --input data/ocr_bench/ \
-    --engines saeocr_v1.2 tesseract_v5 \
-    --by-type scanned_textbooks handwritten_notes annotated_pdfs \
-    --output results/ocr_breakdown.json \
-    --emit-markdown results/ocr_breakdown.md
-```
-
-### ⚖️ Sensitivity Analysis
-Test how the "Confidence Triad" (Factuality, Specificity, Coherence) affects answer quality.
-```bash
-# Example run with variant D weights
-python -m scripts.run_experiment --config config/variants/weights_variant_d.yaml --dataset custom_qa
-```
-
----
-
-## 📝 Research & Publication
-
-The project includes all materials for the upcoming eduRAG research paper in the `paper finalization` directory.
-
-### 📚 Key Artifacts
-- **Current Draft**: `paper finalization/edurag_project/paper/final_paper_v2.pdf`
-- **Results Workbook**: `paper finalization/edurag_project/results/results_workbook.md`
-- **Autopilot Guide**: `paper finalization/edurag_project/experiments/run_commands.md`
-
----
-
-## ⚖️ License
-Distributed under the MIT License. See `LICENSE` for more information.
+<!-- TODO: verify --> No license file is present. Add a license before public distribution.

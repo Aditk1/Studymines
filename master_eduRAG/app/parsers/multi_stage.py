@@ -1,3 +1,7 @@
+"""
+Multi-stage document extraction fallback pipeline for heterogeneous file formats.
+"""
+
 import logging
 import fitz  # PyMuPDF
 from typing import Dict, Any
@@ -5,6 +9,7 @@ from typing import Dict, Any
 logger = logging.getLogger(__name__)
 
 class ExtractionFailedError(Exception):
+    """Define the ExtractionFailedError data structure or service used by this module."""
     pass
 
 class DocumentExtractor:

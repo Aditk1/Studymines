@@ -87,6 +87,7 @@ NOISY_ENTITY_PATTERNS = [
 
 @dataclass
 class ConfidenceResult:
+    """Define the ConfidenceResult data structure or service used by this module."""
     triple: Triple
     factual: float
     specificity: float

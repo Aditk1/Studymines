@@ -1,3 +1,6 @@
+/**
+ * Small branded header component used by legacy or focused layouts.
+ */
 export default function Header() {
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">

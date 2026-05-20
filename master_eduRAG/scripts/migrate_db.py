@@ -1,3 +1,7 @@
+"""
+Apply lightweight SQLite migrations for local development databases.
+"""
+
 
 import os
 import sys

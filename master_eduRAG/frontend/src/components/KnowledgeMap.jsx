@@ -1,3 +1,6 @@
+/**
+ * Interactive knowledge graph and concept explanation view for an artifact.
+ */
 import { useEffect, useRef, useState } from 'react'
 import ForceGraph2D from 'react-force-graph-2d'
 import axios from 'axios'
@@ -142,6 +145,9 @@ function buildNodeExplainer(node, graphData, artifact) {
   }
 }
 
+/**
+ * Interactive knowledge graph and concept explanation view for an artifact.
+ */
 export default function KnowledgeMap({ userId, uploadId, artifact }) {
   const [data, setData] = useState({ nodes: [], links: [] })
   const [loading, setLoading] = useState(true)

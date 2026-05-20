@@ -1,3 +1,6 @@
+/**
+ * Research metrics and benchmark visibility page.
+ */
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { motion } from 'framer-motion'
@@ -13,23 +16,40 @@ import {
   Cpu
 } from 'lucide-react'
 
+/**
+ * Research metrics and benchmark visibility page.
+ */
 export default function Research() {
   const [metrics, setMetrics] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [isEvaluating, setIsEvaluating] = useState(false)
+
+  const fetchMetrics = async () => {
+    try {
+      const response = await axios.get('/api/v1/research/metrics')
+      setMetrics(response.data)
+    } catch (err) {
+      console.error("Failed to fetch research metrics", err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchMetrics = async () => {
-      try {
-        const response = await axios.get('/api/v1/research/metrics')
-        setMetrics(response.data)
-      } catch (err) {
-        console.error("Failed to fetch research metrics", err)
-      } finally {
-        setLoading(false)
-      }
-    }
     fetchMetrics()
   }, [])
+
+  const handleRunEval = async () => {
+    setIsEvaluating(true)
+    try {
+      await axios.post('/api/v1/research/eval/run')
+      await fetchMetrics()
+    } catch (err) {
+      console.error("Failed to run evaluation", err)
+    } finally {
+      setIsEvaluating(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -109,9 +129,26 @@ export default function Research() {
             <Download size={16} />
             Export BibTeX
           </button>
-          <button className="bg-white text-black px-6 py-3 rounded-2xl text-sm font-semibold hover:bg-white/90 transition-all flex items-center gap-2">
-            <Zap size={16} />
-            Run Full Eval
+          <button 
+            onClick={handleRunEval}
+            disabled={isEvaluating}
+            className={`px-6 py-3 rounded-2xl text-sm font-semibold transition-all flex items-center gap-2 ${
+              isEvaluating 
+                ? 'bg-white/20 text-white cursor-not-allowed' 
+                : 'bg-white text-black hover:bg-white/90'
+            }`}
+          >
+            {isEvaluating ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                Evaluating...
+              </>
+            ) : (
+              <>
+                <Zap size={16} />
+                Run Full Eval
+              </>
+            )}
           </button>
         </div>
       </header>

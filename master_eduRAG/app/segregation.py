@@ -13,6 +13,7 @@ logger = get_logger(__name__)
 
 
 class ContentSegregator:
+    """Define the ContentSegregator data structure or service used by this module."""
     def __init__(self, api_key: Optional[str] = None):
         """Initialize ContentSegregator with Gemini primary and Groq fallback."""
         if api_key:
@@ -75,4 +76,5 @@ Respond ONLY with valid JSON:
 
 
 def segregate_content(text, manual_subject=None, manual_topic=None, file_name=None, api_key=None):
+    """Handle the segregate content operation."""
     return ContentSegregator(api_key).segregate(text, manual_subject, manual_topic, file_name)

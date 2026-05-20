@@ -1,3 +1,7 @@
+"""
+High-level StudyMines orchestration for document parsing and package generation.
+"""
+
 import os
 import logging
 from typing import Dict, Any

@@ -1,3 +1,7 @@
+"""
+Run a smoke test against PDF ingestion and package generation.
+"""
+
 import asyncio
 import json
 import os

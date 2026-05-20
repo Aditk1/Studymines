@@ -1,3 +1,7 @@
+"""
+Run endpoint-level stress checks against a deployed or local API instance.
+"""
+
 
 import requests
 

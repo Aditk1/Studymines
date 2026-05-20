@@ -37,6 +37,7 @@ logger = get_logger("pipeline")
 
 @dataclass
 class IngestResult:
+    """Define the IngestResult data structure or service used by this module."""
     graph: KnowledgeGraph
     num_documents: int
     num_chunks: int

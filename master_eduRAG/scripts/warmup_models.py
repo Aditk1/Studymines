@@ -1,3 +1,7 @@
+"""
+Pre-download or warm local ML models used by parsing and GraphRAG workflows.
+"""
+
 import os
 import sys
 
@@ -35,7 +39,7 @@ def warmup_paddle():
     try:
         from paddleocr import PaddleOCR
         # This will download det, rec, and cls models if not present
-        ocr = PaddleOCR(use_angle_cls=True, lang="en", show_log=True)
+        ocr = PaddleOCR(use_textline_orientation=True, lang="en")
         print("✓ PaddleOCR initialized successfully.")
     except Exception as e:
         print(f"✗ PaddleOCR warmup failed: {e}")

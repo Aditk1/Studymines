@@ -1,3 +1,7 @@
+"""
+Print summary statistics for the local eduRAG SQLite database.
+"""
+
 
 import sqlite3
 import os

@@ -1,3 +1,6 @@
+/**
+ * Application shell that owns authentication state, navigation, and feature routes.
+ */
 import { useState, useEffect } from 'react'
 import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -35,12 +38,21 @@ import Scheduler from './components/Scheduler'
 import { FileText, Users, MessageSquare, BookOpen, PenTool, Calendar, Target } from 'lucide-react'
 import axios from 'axios'
 
+/**
+ * Application shell that owns authentication state, navigation, and feature routes.
+ */
 function App() {
   const navigate = useNavigate()
   const location = useLocation()
   
   const [user, setUser] = useState(null)
-  const [ecosystemStats, setEcosystemStats] = useState({ knowledge_retained: 84.2, total_study_hours: 124.5, total_users: 1204, active_now: 28 })
+  const [ecosystemStats, setEcosystemStats] = useState({ 
+    knowledge_retained: 0, 
+    total_study_hours: 0, 
+    total_users: 0, 
+    active_now: 0,
+    distribution: { undergraduate: 0, high_school: 0, postgraduate: 0 }
+  })
   
   // Keep track of active artifacts
   const [selectedUploadId, setSelectedUploadId] = useState(() => localStorage.getItem('studymines_upload_id') || null)
@@ -80,7 +92,8 @@ function App() {
       }
     }
     fetchStats()
-    const interval = setInterval(fetchStats, 60000)
+    // Fetch more frequently to make it look "live"
+    const interval = setInterval(fetchStats, 5000)
     return () => clearInterval(interval)
   }, [])
 
@@ -102,6 +115,19 @@ function App() {
     setSelectedUploadId(null)
     navigate('/upload')
   }
+
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      response => response,
+      error => {
+        if (error.response?.status === 401) {
+          handleLogout()
+        }
+        return Promise.reject(error)
+      }
+    )
+    return () => axios.interceptors.response.eject(interceptor)
+  }, [navigate])
 
   const navItems = user?.role === 'teacher' 
     ? [
@@ -320,18 +346,33 @@ function App() {
               <nav className="flex items-center justify-between mb-5">
                 <div className="flex items-center gap-3">
                   <h3 className="font-medium tracking-tighter">Student Distribution</h3>
-                  <div className="px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-bold tracking-wider uppercase">Live</div>
+                  <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/10 text-[10px] font-bold tracking-wider uppercase">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                    {ecosystemStats.active_now} LIVE
+                  </div>
                 </div>
               </nav>
 
-              <div className="flex-1 flex items-center justify-center p-8 bg-white/5 rounded-2xl border border-white/5">
+              <div className="flex-1 flex items-center justify-center p-8 bg-white/5 rounded-2xl border border-white/5 relative">
                  <div className="relative w-40 h-40">
                   <svg viewBox="0 0 100 100" className="w-full h-full transform -rotate-90">
-                    <circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.1)" strokeWidth="12" fill="none" />
-                    <circle cx="50" cy="50" r="40" stroke="#f97316" strokeWidth="12" fill="none" strokeDasharray="251" strokeDashoffset="40" className="animate-pulse" />
+                    <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,0.05)" strokeWidth="4" fill="none" />
+                    <circle cx="50" cy="50" r="34" stroke="rgba(255,255,255,0.05)" strokeWidth="4" fill="none" />
+                    <circle cx="50" cy="50" r="26" stroke="rgba(255,255,255,0.05)" strokeWidth="4" fill="none" />
+                    
+                    <circle cx="50" cy="50" r="42" stroke="#3b82f6" strokeWidth="4" fill="none" strokeDasharray={263.89} strokeDashoffset={263.89 * (1 - (ecosystemStats.distribution?.undergraduate || 0) / (ecosystemStats.total_users || 1))} className="transition-all duration-1000 ease-out" />
+                    <circle cx="50" cy="50" r="34" stroke="#f97316" strokeWidth="4" fill="none" strokeDasharray={213.62} strokeDashoffset={213.62 * (1 - (ecosystemStats.distribution?.high_school || 0) / (ecosystemStats.total_users || 1))} className="transition-all duration-1000 delay-100 ease-out" />
+                    <circle cx="50" cy="50" r="26" stroke="#10b981" strokeWidth="4" fill="none" strokeDasharray={163.36} strokeDashoffset={163.36 * (1 - (ecosystemStats.distribution?.postgraduate || 0) / (ecosystemStats.total_users || 1))} className="transition-all duration-1000 delay-200 ease-out" />
                   </svg>
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-3xl font-light">{ecosystemStats.total_users?.toLocaleString()}</span>
+                    <motion.span 
+                      key={ecosystemStats.total_users}
+                      initial={{ opacity: 0.5, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-3xl font-light"
+                    >
+                      {ecosystemStats.total_users?.toLocaleString()}
+                    </motion.span>
                     <span className="text-[10px] text-white/40 uppercase tracking-widest mt-1">Total Users</span>
                   </div>
                  </div>

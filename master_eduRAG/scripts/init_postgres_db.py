@@ -1,3 +1,7 @@
+"""
+Initialize PostgreSQL tables for the SQLAlchemy schema.
+"""
+
 import os
 import sys
 

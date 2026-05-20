@@ -1,9 +1,15 @@
+/**
+ * Assignments list showing active and generating assessments.
+ */
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FileText, Plus, CheckCircle, Clock, Sparkles, ChevronRight, Play } from 'lucide-react'
 import axios from 'axios'
 import AssessmentView from './AssessmentView'
 
+/**
+ * Assignments list showing active and generating assessments.
+ */
 export default function Assignments({ user }) {
   const [assignments, setAssignments] = useState([])
   const [loading, setLoading] = useState(true)

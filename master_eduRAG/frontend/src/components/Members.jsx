@@ -1,9 +1,15 @@
+/**
+ * Organization member management view for teacher/admin roles.
+ */
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Users, MoreVertical, Ban, ShieldCheck, Trash2, XCircle, CheckCircle } from 'lucide-react'
 import axios from 'axios'
 import { useNavigate } from 'react-router-dom'
 
+/**
+ * Organization member management view for teacher/admin roles.
+ */
 export default function Members({ user: currentUser }) {
   const navigate = useNavigate()
   const [members, setMembers] = useState([])

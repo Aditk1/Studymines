@@ -1,3 +1,6 @@
+/**
+ * Study workspace for summaries, flashcards, questions, graph map, and chat.
+ */
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -17,6 +20,9 @@ import {
 } from 'lucide-react'
 import KnowledgeMap from './KnowledgeMap'
 
+/**
+ * Study workspace for summaries, flashcards, questions, graph map, and chat.
+ */
 export default function StudyLab({ uploadId, userId, onBack }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)

@@ -1,3 +1,7 @@
+"""
+SQLAlchemy models for classroom materials and extracted document chunks.
+"""
+
 import uuid
 from datetime import datetime
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, JSON, Float
@@ -6,6 +10,7 @@ from sqlalchemy.orm import relationship
 from app.database import Base
 
 class LMSMaterial(Base):
+    """Define the LMSMaterial data structure or service used by this module."""
     __tablename__ = "lms_materials"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -42,6 +47,7 @@ class LMSMaterial(Base):
     chunks = relationship("DocumentChunk", back_populates="material", cascade="all, delete-orphan")
 
 class DocumentChunk(Base):
+    """Define the DocumentChunk data structure or service used by this module."""
     __tablename__ = "lms_document_chunks"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))

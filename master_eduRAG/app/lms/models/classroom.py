@@ -1,3 +1,7 @@
+"""
+SQLAlchemy models for LMS classrooms and classroom memberships.
+"""
+
 import uuid
 from datetime import datetime
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Text, UniqueConstraint, Integer, JSON
@@ -7,6 +11,7 @@ from app.database import Base
 from app.models import Assessment
 
 class Classroom(Base):
+    """Define the Classroom data structure or service used by this module."""
     __tablename__ = "lms_classrooms"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -32,6 +37,7 @@ class Classroom(Base):
     assessments = relationship("Assessment", back_populates="classroom", cascade="all, delete-orphan")
 
 class ClassroomMember(Base):
+    """Define the ClassroomMember data structure or service used by this module."""
     __tablename__ = "lms_classroom_members"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))

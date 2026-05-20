@@ -1,3 +1,6 @@
+/**
+ * Navigation control for switching between application sections.
+ */
 export default function Navigation({ currentPage, setCurrentPage }) {
   const navItems = [
     { id: 'upload', label: 'Upload Document', icon: '📤' },

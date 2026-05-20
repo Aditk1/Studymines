@@ -1,3 +1,7 @@
+"""
+LMS analytics routes for teacher insight heatmaps and cross-classroom search.
+"""
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func

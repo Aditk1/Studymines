@@ -1,3 +1,7 @@
+"""
+SQLAlchemy models for LMS chat rooms and persisted messages.
+"""
+
 import uuid
 from datetime import datetime
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Index, String, Text, Integer, JSON
@@ -6,6 +10,7 @@ from sqlalchemy.orm import relationship
 from app.database import Base
 
 class ChatRoom(Base):
+    """Define the ChatRoom data structure or service used by this module."""
     __tablename__ = "lms_chat_rooms"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
@@ -26,6 +31,7 @@ class ChatRoom(Base):
     )
 
 class ChatMessage(Base):
+    """Define the ChatMessage data structure or service used by this module."""
     __tablename__ = "lms_chat_messages"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))

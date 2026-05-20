@@ -1,3 +1,6 @@
+/**
+ * Global material archive across classrooms and generated artifacts.
+ */
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -7,6 +10,9 @@ import {
 } from 'lucide-react'
 import axios from 'axios'
 
+/**
+ * Global material archive across classrooms and generated artifacts.
+ */
 export default function GlobalContent({ user, onOpenArtifact }) {
   const [materials, setMaterials] = useState([])
   const [loading, setLoading] = useState(true)
